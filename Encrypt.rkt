@@ -97,7 +97,11 @@
         ;Add .locknut extension
         (new-file-name (string-append input-file-name ".locknut")))
     
-    ;Remove the older version if necessary
+    ;If checking password, add the password onto the beginning of the chars-list
+    (when (send check-password-checkbox get-value)
+      (set! chars-list (append (string->list password) chars-list)))
+    
+    ;Remove the older version of the output file if necessary
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
     
@@ -123,20 +127,50 @@
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
     
-    (if (equal? #t glance?)
-        ;Decrypt and open in notepad
-        (begin
-          (print-this (list->string (encrypt chars-list solver-list password)) "temp.txt")
-          (system "notepad.exe temp.txt")
-          (delete-file "temp.txt"))
-        
-        ;Decrypt and print
-        (begin
-          (print-this (list->string (encrypt chars-list solver-list password)) input-file-name)
+    ;Start decryption 
+    (let ((decrypted-file (list->string (encrypt chars-list solver-list password)) ))
+      
+      (if (equal? #t glance?)
+          ;Glance : decrypt and open in notepad
+          (begin
+            ;Check if verifying password
+            (if (send check-password-checkbox get-value)
+                ;Verify password
+                (if (equal? (substring decrypted-file 0 (string-length password)) password)
+                    ;Valid password
+                    (begin
+                      (print-this decrypted-file "temp.txt")
+                      (system "notepad.exe temp.txt")
+                      (delete-file "temp.txt"))
+                    ;Invalid password
+                    #f)
+                ;Don't verify password
+                (begin
+                  (system "notepad.exe temp.txt")
+                  (delete-file "temp.txt"))
+                ))
           
-          ;Rename the encrypted version
-          (rename-file-or-directory input-file-name new-file-name))
-        )))
+          ;Don't glance : decrypt and print
+          (begin
+            ;Check if verifying password
+            (if (send check-password-checkbox get-value)
+                ;Verify password
+                (if (equal? (substring decrypted-file 0 (string-length password)) password)
+                    ;Valid password
+                    (begin
+                      (print-this (list->string (encrypt chars-list solver-list password)) input-file-name)
+                      ;Rename the encrypted version
+                      (rename-file-or-directory input-file-name new-file-name))
+                    ;Invalid password
+                    #f)
+                ;Don't verify password
+                (begin
+                  (print-this (list->string (encrypt chars-list solver-list password)) input-file-name)
+                  ;Rename the encrypted version
+                  (rename-file-or-directory input-file-name new-file-name))
+                ))
+          ))
+    ))
 
 
 ;GUI SETUP
@@ -187,7 +221,12 @@
        (horiz-margin 10)
        (callback (lambda (button event)
                    ;Get passcode
-                   (let ((password (send passcode-field get-value)))
+                   (letrec ((password (send passcode-field get-value))
+                            (no-pass? (equal? password "")))
+                     
+                     ;If password is blank, set it to a dummy value so verification works properly
+                     (when no-pass?
+                       (set! password "Qa30EfdB5h"))
                      
                      ;Check if password is being used as the cipher key
                      (if (send password-is-key-checkbox get-value)
@@ -211,8 +250,12 @@
                              (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
                                  (begin
                                    (send main-frame set-status-text "Decrypting...")
-                                   (decrypt-file chosen-file password #f)
-                                   (send main-frame set-status-text "Finished decrypting!"))
+                                   ;Run decryption
+                                   (if (decrypt-file chosen-file password #f)
+                                       ;Success
+                                       (send main-frame set-status-text "Finished decrypting!")
+                                       ;Invalid password, nothing done
+                                       (send main-frame set-status-text "Invalid password")))
                                  (begin
                                    (send main-frame set-status-text "Encrypting...")
                                    (encrypt-file chosen-file password)
@@ -230,7 +273,12 @@
        (horiz-margin 10)
        (callback (lambda (button event)
                    ;Get passcode
-                   (let ((password (send passcode-field get-value)))
+                   (letrec ((password (send passcode-field get-value))
+                            (no-pass? (equal? password "")))
+                     
+                     ;If password is blank, set it to a dummy value so verification works properly
+                     (when no-pass?
+                       (set! password "Qa30EfdB5h"))
                      
                      ;Check if password is being used as the cipher key
                      (if (send password-is-key-checkbox get-value)
@@ -251,11 +299,16 @@
                              (set! chosen-file (path->string chosen-file))
                              
                              ;Decrypt .locknut files, open in notepad
+                             ;Check if file is .locknut extension
                              (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
                                  (begin
                                    (send main-frame set-status-text "Decrypting...")
-                                   (decrypt-file chosen-file password #t)
-                                   (send main-frame set-status-text "Finished decrypting!"))
+                                   (if (decrypt-file chosen-file password #t)
+                                       ;Success
+                                       (send main-frame set-status-text "Finished decrypting!")
+                                       ;Invalid password, nothing done
+                                       (send main-frame set-status-text "Invalid password")))
+                                 ;Wrong extension
                                  (send main-frame set-status-text "File must be encrypted .locknut file"))
                              
                              ))
