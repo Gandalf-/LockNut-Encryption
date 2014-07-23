@@ -26,9 +26,11 @@
         output
         (loop (cdr input) (flatten (cons output (* -1 (car input))))))))
 
-;Define key-list and solver-list
-(define key-list '(210 186 204 51 43 67 133 168 222 15 104 36 195 94 168 242 226 50 74 198 185 249 121 133 225 87))
-(set! key-list (append key-list '(93 235 133 164 3 215 210 100 5 155 250 2 163 77 244 104 162 199 61 193 226 92 131 241 2 135)))
+;Define default key-list and solver-list
+(define default-key '(210 186 204 51 43 67 133 168 222 15 104 36 195 94 168 242 226 50 74 198 185 249 121 133 225 87))
+(set! default-key (append default-key '(93 235 133 164 3 215 210 100 5 155 250 2 163 77 244 104 162 199 61 193 226 92 131 241 2 135)))
+
+(define key-list default-key)
 (define solver-list (create-solver key-list))
 
 ;Generate a seed from the given password
@@ -37,6 +39,13 @@
     (if (empty? input)
         (+ 1 (modulo output 10))
         (loop (cdr input) (+ (char->integer (car input)) output)))))
+
+;Generate a key-list from the given password
+(define (password->key-list password)
+  (let loop ((input (string->list password)) (output '() ))
+    (if (empty? input)
+        output
+        (loop (cdr input) (flatten (cons output (char->integer (car input))))))))
 
 ;ENCRYPTION ALGORITHM
 ;----------------------------------------------------------------------
@@ -127,18 +136,161 @@
 
 ;GUI SETUP
 ;---------------------------------------------
-;Frame
-(define frame 
+
+(define my-font (make-object font%
+                  10
+                  'modern))
+
+;MAIN-FRAME
+;---------------------------------------------
+(define main-frame 
   (new frame%
        (label "LockNut Encryption")
        (stretchable-width #f)
        (stretchable-height #f)
        ))
 
-(define my-font (make-object font%
-                  10
-                  'modern))
+;Background, custom nut image
+(define background-image (new message% [parent main-frame] 
+                              (label (make-object bitmap% "Nut.jpg"))))
 
+;Panel for file encryption or decryption, glance, and passcode-field
+(define panel (instantiate horizontal-panel% (main-frame)
+                (stretchable-height #f)
+                ))
+
+;Panel for options and info
+(define lower-panel (instantiate horizontal-panel% (main-frame)
+                      (stretchable-height #f)
+                      ))
+
+;Gets optional password from user
+; Default is to generate a seed that alters the encryption algorithm's output
+; Option in option-panel to use password as the encryption key
+(define passcode-field
+  (new text-field%
+       (label "Password")
+       (parent main-frame)
+       (font my-font)
+       ))
+
+;Button for file encryption or decryption
+(define run-button
+  (new button% 
+       (label "Encrypt/Decrypt File")
+       (parent panel)
+       (horiz-margin 10)
+       (callback (lambda (button event)
+                   ;Get passcode
+                   (let ((password (send passcode-field get-value)))
+                     
+                     ;Check if password is being used as the cipher key
+                     (if (send password-is-key-checkbox get-value)
+                       ;Use password as key
+                       (begin
+                         (set! key-list (password->key-list (send passcode-field get-value)))
+                         (set! solver-list (create-solver key-list)))
+                       ;Use default
+                       (begin
+                         (set! key-list default-key)
+                         (set! solver-list (create-solver key-list))))
+                                         
+                     ;Get file choice
+                     (let ((chosen-file (get-file)))
+                       (if (equal? chosen-file #f)
+                           (send main-frame set-status-text "No file chosen")
+                           (begin
+                             (set! chosen-file (path->string chosen-file))
+                             
+                             ;Decrypt .locknut files, encrypt all other files
+                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                                 (begin
+                                   (send main-frame set-status-text "Decrypting...")
+                                   (decrypt-file chosen-file password #f)
+                                   (send main-frame set-status-text "Finished decrypting!"))
+                                 (begin
+                                   (send main-frame set-status-text "Encrypting...")
+                                   (encrypt-file chosen-file password)
+                                   (send main-frame set-status-text "Finished encrypting!")))
+                             
+                             ))
+                       ))
+                   ))))
+
+;Decrypts a file using the optional password, but just opens it in notepad. Decrypted file isn't saved
+(define glance-button
+  (new button%
+       (label "Glance")
+       (parent panel)
+       (horiz-margin 10)
+       (callback (lambda (button event)
+                   ;Get passcode
+                   (let ((password (send passcode-field get-value)))
+                     
+                     ;Check if password is being used as the cipher key
+                     (if (send password-is-key-checkbox get-value)
+                       ;Use password as key
+                       (begin
+                         (set! key-list (password->key-list (send passcode-field get-value)))
+                         (set! solver-list (create-solver key-list)))
+                       ;Use default
+                       (begin
+                         (set! key-list default-key)
+                         (set! solver-list (create-solver key-list))))
+                                          
+                     ;Get file choice
+                     (let ((chosen-file (get-file)))
+                       (if (equal? chosen-file #f)
+                           (send main-frame set-status-text "No file chosen")
+                           (begin
+                             (set! chosen-file (path->string chosen-file))
+                             
+                             ;Decrypt .locknut files, open in notepad
+                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                                 (begin
+                                   (send main-frame set-status-text "Decrypting...")
+                                   (decrypt-file chosen-file password #t)
+                                   (send main-frame set-status-text "Finished decrypting!"))
+                                 (send main-frame set-status-text "File must be encrypted .locknut file"))
+                             
+                             ))
+                       )))
+                 )))
+
+;OPTIONS WINDOW
+;-----------------------------------------------
+(define option-frame
+  (new frame%
+       (label "Advanced Options")
+       (min-width 350)
+       (min-height 150)
+       ))
+
+;Button that opens advanced options window
+(define options-button
+  (new button%
+       (label "Options")
+       (parent lower-panel)
+       (horiz-margin 35)
+       (callback (lambda (button event)
+                   (send option-frame show #t)))
+       ))
+
+;Panel for options buttons
+(define options-panel (instantiate vertical-panel% (option-frame)
+                        (stretchable-height #f)
+                        ))
+
+;Checkbox
+(define password-is-key-checkbox
+  (new check-box%
+       (label "Use password as Vigenere cipher key")
+       (parent options-panel)
+       ))
+
+
+;INFORMATION WINDOW
+;-----------------------------------------------
 (define info-frame
   (new frame%
        (label "Information")
@@ -146,118 +298,25 @@
        (min-height 100)
        ))
 
-;Background, custom nut image
-(define background-image (new message% [parent frame] 
-                              (label (make-object bitmap% "Nut.jpg"))))
-
-;Panel for file choice/run, passcode and info buttons
-(define panel (instantiate horizontal-panel% (frame)
-                (stretchable-height #f)
-                ))
-
-;Panel for glance
-(define lower-panel (instantiate horizontal-panel% (frame)
-                      (stretchable-height #f)
-                      ))
-
-;Gets optional password from user
-(define passcode-field
-  (new text-field%
-       (label "Optional Passcode")
-       (parent frame)
-       (font my-font)
-       ))
-
-;Button for file encryption or decryption
-(define run-button
-  (new button% 
-       (label "File encryption or decryption")
-       (parent panel)
-       (horiz-margin 35)
-       (callback (lambda (button event)
-                   ;Get passcode
-                   (let ((password (send passcode-field get-value)))
-                     
-                     ;Set the input passcode to all stars
-                     (send passcode-field set-value
-                           (make-string (string-length password) #\*))
-                     
-                     ;Get file choice
-                     (let ((chosen-file (get-file)))
-                       (if (equal? chosen-file #f)
-                           (send frame set-status-text "No file chosen")
-                           (begin
-                             (set! chosen-file (path->string chosen-file))
-                             
-                             ;Decrypt .locknut files, encrypt all other files
-                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                                 (begin
-                                   (send frame set-status-text "Decrypting...")
-                                   (decrypt-file chosen-file password #f)
-                                   (send frame set-status-text "Finished decrypting!"))
-                                 (begin
-                                   (send frame set-status-text "Encrypting...")
-                                   (encrypt-file chosen-file password)
-                                   (send frame set-status-text "Finished encrypting!")))
-                             
-                             ;Set the passcode field back to blank
-                             (send passcode-field set-value "")
-                             ))
-                       ))
-                   ))))
-
-;Decrypts a file using the optional password, but just opens it in notepad. Decrypted file isn't printed
-(define glance-button
-  (new button%
-       (label "Glance at encrypted file")
-       (parent lower-panel)
-       (horiz-margin 12)
-       (callback (lambda (button event)
-                   ;Get passcode
-                   (let ((password (send passcode-field get-value)))
-                     
-                     ;Set the input passcode to all stars
-                     (send passcode-field set-value
-                           (make-string (string-length password) #\*))
-                     
-                     ;Get file choice
-                     (let ((chosen-file (get-file)))
-                       (if (equal? chosen-file #f)
-                           (send frame set-status-text "No file chosen")
-                           (begin
-                             (set! chosen-file (path->string chosen-file))
-                             
-                             ;Decrypt .locknut files, open in notepad
-                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                                 (begin
-                                   (send frame set-status-text "Decrypting...")
-                                   (decrypt-file chosen-file password #t)
-                                   (send frame set-status-text "Finished decrypting!"))
-                                 (send frame set-status-text "File must be encrypted .locknut file"))
-                             
-                             ;Set the passcode field back to blank
-                             (send passcode-field set-value "")
-                             ))
-                       )))
-                 )))
-
 ;Button that displays info
 (define info-button
   (new button%
        (label "Info")
        (parent lower-panel)
-       (horiz-margin 5)
+       (horiz-margin 25)
        (callback (lambda (button event)
-                   (send info-frame show #t)))))
+                   (send info-frame show #t)))
+       ))
 
 (define info-message
   (new message%
        (label "LockNut: personal file encryption program\n\n Protect personal files with a powerful vigenere cipher\n and optional password for additional strength.\n\n  Austin Voecks, Summer 2014")
        (font my-font)
-       (parent info-frame)))
+       (parent info-frame)
+       ))
 
-(send frame create-status-line)
-(send frame show #t)
+(send main-frame create-status-line)
+(send main-frame show #t)
 
 
 
