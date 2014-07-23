@@ -16,6 +16,7 @@
                           (lambda (output-port)
                             (display x output-port))))
 
+
 ;ENCRYPTION SETUP
 ;----------------------------------------------------------------------
 
@@ -46,6 +47,7 @@
     (if (empty? input)
         output
         (loop (cdr input) (flatten (cons output (char->integer (car input))))))))
+
 
 ;ENCRYPTION ALGORITHM
 ;----------------------------------------------------------------------
@@ -84,6 +86,7 @@
                   )))
         )))
 
+
 ;FILE ENCRYPTION
 ; Takes a file as input and prints the encrypted version of the file to a text file
 ;--------------------------------------------------------------------------------
@@ -104,6 +107,7 @@
     ;Rename the input file
     (rename-file-or-directory input-file-name new-file-name))
   )
+
 
 ;FILE DECRYPTION
 ; Takes an encrypted .locknut file as input and prints the decrypted version of the file to a text file
@@ -133,6 +137,7 @@
           ;Rename the encrypted version
           (rename-file-or-directory input-file-name new-file-name))
         )))
+
 
 ;GUI SETUP
 ;---------------------------------------------
@@ -186,15 +191,15 @@
                      
                      ;Check if password is being used as the cipher key
                      (if (send password-is-key-checkbox get-value)
-                       ;Use password as key
-                       (begin
-                         (set! key-list (password->key-list (send passcode-field get-value)))
-                         (set! solver-list (create-solver key-list)))
-                       ;Use default
-                       (begin
-                         (set! key-list default-key)
-                         (set! solver-list (create-solver key-list))))
-                                         
+                         ;Use password as key
+                         (begin
+                           (set! key-list (password->key-list (send passcode-field get-value)))
+                           (set! solver-list (create-solver key-list)))
+                         ;Use default
+                         (begin
+                           (set! key-list default-key)
+                           (set! solver-list (create-solver key-list))))
+                     
                      ;Get file choice
                      (let ((chosen-file (get-file)))
                        (if (equal? chosen-file #f)
@@ -229,15 +234,15 @@
                      
                      ;Check if password is being used as the cipher key
                      (if (send password-is-key-checkbox get-value)
-                       ;Use password as key
-                       (begin
-                         (set! key-list (password->key-list (send passcode-field get-value)))
-                         (set! solver-list (create-solver key-list)))
-                       ;Use default
-                       (begin
-                         (set! key-list default-key)
-                         (set! solver-list (create-solver key-list))))
-                                          
+                         ;Use password as key
+                         (begin
+                           (set! key-list (password->key-list (send passcode-field get-value)))
+                           (set! solver-list (create-solver key-list)))
+                         ;Use default
+                         (begin
+                           (set! key-list default-key)
+                           (set! solver-list (create-solver key-list))))
+                     
                      ;Get file choice
                      (let ((chosen-file (get-file)))
                        (if (equal? chosen-file #f)
@@ -257,14 +262,17 @@
                        )))
                  )))
 
+
 ;OPTIONS WINDOW
 ;-----------------------------------------------
-(define option-frame
+(define options-frame
   (new frame%
        (label "Advanced Options")
        (min-width 350)
        (min-height 150)
        ))
+
+(send options-frame create-status-line)
 
 ;Button that opens advanced options window
 (define options-button
@@ -273,19 +281,39 @@
        (parent lower-panel)
        (horiz-margin 35)
        (callback (lambda (button event)
-                   (send option-frame show #t)))
+                   (send options-frame show #t)))
        ))
 
 ;Panel for options buttons
-(define options-panel (instantiate vertical-panel% (option-frame)
+(define options-panel (instantiate vertical-panel% (options-frame)
                         (stretchable-height #f)
                         ))
 
-;Checkbox
+;Use password as the Vigenere key
 (define password-is-key-checkbox
   (new check-box%
        (label "Use password as Vigenere cipher key")
        (parent options-panel)
+       (callback (lambda (button event)
+                   (if (send password-is-key-checkbox get-value)
+                       ;Use password as key
+                       (send options-frame set-status-text "Warning: A short password greatly weakens the encryption")
+                       ;Use default
+                       (send options-frame set-status-text "Encryption key set back to default value"))))
+       ))
+
+;Check password
+(define check-password-checkbox
+  (new check-box%
+       (label "Check password before decryption")
+       (parent options-panel)
+       (value #t)
+       (callback (lambda (button event)
+                   (if (send check-password-checkbox get-value)
+                       ;Use password as key
+                       (send options-frame set-status-text "Will verify password used to encrypt before decryption")
+                       ;Use default
+                       (send options-frame set-status-text "Warning: incorrect password may ruin the file permanently."))))
        ))
 
 
