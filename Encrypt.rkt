@@ -27,19 +27,15 @@
         output
         (loop (cdr input) (flatten (cons output (* -1 (car input))))))))
 
-;Define default key-list and solver-list
-(define default-key '(210 186 204 51 43 67 133 168 222 15 104 36 195 94 168 242 226 50 74 198 185 249 121 133 225 87))
-(set! default-key (append default-key '(93 235 133 164 3 215 210 100 5 155 250 2 163 77 244 104 162 199 61 193 226 92 131 241 2 135)))
+;Define default-key, key-list and solver-list
+(define A '(28 72 99 85 89 21 40 86 42 26 23 14 50 6 28 51 79 7 34 90 63 90 37 81 18))
+(define B '(97 40 51 70 55 53 97 64 12 96 19 71 16 7 9 60 26 5 46 13 96 60 89 85 81))
+(define C '(84 10 89 95 91 90 83 69 57 33 72 29 46 10 77 49 89 82 41 0 5 96 20 69 99))
+(define D '(61 23 76 35 86 47 3 91 6 79 39 56 31 77 54 96 90 20 81 67 31 65 65 56 61))
 
+(define default-key (append A B C D))
 (define key-list default-key)
 (define solver-list (create-solver key-list))
-
-;Generate a seed from the given password
-(define (password->seed password)
-  (let loop ((input (string->list password)) (output 0))
-    (if (empty? input)
-        (+ 1 (modulo output 10))
-        (loop (cdr input) (+ (char->integer (car input)) output)))))
 
 ;Generate a key-list from the given password
 (define (password->key-list password)
@@ -58,7 +54,7 @@
   (let loop ((output-list '() )
              (remaining-input input-list)
              (current-key-list key-list)
-             (seed (password->seed password)))
+             )
     
     (if (empty? remaining-input)
         output-list
@@ -67,22 +63,15 @@
           (when (empty? current-key-list)
             (set! current-key-list key-list))
           
-          (let ((new-shift-amount (modulo 
-                                   (+ (* seed (car current-key-list)) (char->integer
-                                                                       (car remaining-input)))
-                                   200)))
-            
-            ;Check for max modulo case, fix if necessary
-            (when (and (= 0 new-shift-amount) 
-                       (not (= 0 (char->integer (car remaining-input)))))
-              (set! new-shift-amount 200))
+          ;Create the new shift amount from the key-list
+          (let ((new-shift-amount (+ (car current-key-list) 
+                                     (char->integer (car remaining-input)))))
             
             ;Continue loop
             (loop (flatten (cons output-list
                                  (integer->char new-shift-amount)))
                   (cdr remaining-input)
                   (cdr current-key-list)
-                  seed
                   )))
         )))
 
@@ -132,43 +121,48 @@
       
       (if (equal? #t glance?)
           ;Glance : decrypt and open in notepad
-          (begin
-            ;Check if verifying password
-            (if (send check-password-checkbox get-value)
-                ;Verify password
-                (if (equal? (substring decrypted-file 0 (string-length password)) password)
-                    ;Valid password
-                    (begin
-                      (print-this decrypted-file "temp.txt")
-                      (system "notepad.exe temp.txt")
-                      (delete-file "temp.txt"))
-                    ;Invalid password
-                    #f)
-                ;Don't verify password
-                (begin
-                  (system "notepad.exe temp.txt")
-                  (delete-file "temp.txt"))
-                ))
+          (if (send check-password-checkbox get-value)
+              
+              ;Verify password
+              (if (equal? (substring decrypted-file 0 (string-length password)) password)
+                  
+                  ;Valid password, remove password from beginning and show in notepad
+                  (begin
+                    (print-this (substring decrypted-file (string-length password) (string-length decrypted-file))  "temp.txt")
+                    (system "notepad.exe temp.txt")
+                    (delete-file "temp.txt"))
+                  
+                  ;Invalid password
+                  #f)
+              
+              ;Don't verify password
+              (begin
+                ;Remove password from beginning and show in notepad
+                (print-this (substring decrypted-file (string-length password) (string-length decrypted-file))  "temp.txt")
+                (system "notepad.exe temp.txt")
+                (delete-file "temp.txt")))
           
           ;Don't glance : decrypt and print
-          (begin
-            ;Check if verifying password
-            (if (send check-password-checkbox get-value)
-                ;Verify password
-                (if (equal? (substring decrypted-file 0 (string-length password)) password)
-                    ;Valid password
-                    (begin
-                      (print-this (list->string (encrypt chars-list solver-list password)) input-file-name)
-                      ;Rename the encrypted version
-                      (rename-file-or-directory input-file-name new-file-name))
-                    ;Invalid password
-                    #f)
-                ;Don't verify password
-                (begin
-                  (print-this (list->string (encrypt chars-list solver-list password)) input-file-name)
-                  ;Rename the encrypted version
-                  (rename-file-or-directory input-file-name new-file-name))
-                ))
+          (if (send check-password-checkbox get-value)
+              
+              ;Verify password
+              (if (equal? (substring decrypted-file 0 (string-length password)) password)
+                  
+                  ;Valid password
+                  (begin
+                    (print-this (substring decrypted-file (string-length password) (string-length decrypted-file)) input-file-name)
+                    ;Rename the encrypted version
+                    (rename-file-or-directory input-file-name new-file-name))
+                  
+                  ;Invalid password
+                  #f)
+              
+              ;Don't verify password
+              (begin
+                (print-this (substring decrypted-file (string-length password) (string-length decrypted-file)) input-file-name)
+                ;Rename the encrypted version
+                (rename-file-or-directory input-file-name new-file-name))
+              )
           ))
     ))
 
@@ -248,6 +242,7 @@
                              
                              ;Decrypt .locknut files, encrypt all other files
                              (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                                 
                                  (begin
                                    (send main-frame set-status-text "Decrypting...")
                                    ;Run decryption
@@ -256,6 +251,7 @@
                                        (send main-frame set-status-text "Finished decrypting!")
                                        ;Invalid password, nothing done
                                        (send main-frame set-status-text "Invalid password")))
+                                 
                                  (begin
                                    (send main-frame set-status-text "Encrypting...")
                                    (encrypt-file chosen-file password)

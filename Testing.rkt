@@ -13,8 +13,14 @@
 
 ;(make-all-chars)
 
-(let ((a (string->list "apple") )
-      (b "banana"))
-  (set! a (append (string->list b) a))
-  a)
+(letrec ((a 5)
+      (b (+ a 1)))
+  b)
     
+(define default '(1 2 3 4 5 6 8))
+
+(let loop ((i 0) (output '() ))
+  (if (= i 25)
+      output
+      (loop (+ i 1) (flatten (cons output (random 100))))))
+      
