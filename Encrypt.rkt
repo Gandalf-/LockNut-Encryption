@@ -487,14 +487,14 @@
 ;Check password
 (define check-password-checkbox
   (new check-box%
-       (label "Check password before decryption")
+       (label "Verify password before decryption    ")
        (parent options-panel)
        (value #t)
        (callback (lambda (button event)
                    (if (send check-password-checkbox get-value)
-                       ;Use password as key
+                       ;Verify password
                        (send options-frame set-status-text "Will verify password used to encrypt before decryption")
-                       ;Use default
+                       ;Don't verify password
                        (send options-frame set-status-text "Warning: incorrect password may ruin the file permanently."))))
        ))
 
@@ -520,9 +520,18 @@
 
 (define info-message
   (new message%
-       (label "LockNut: personal file encryption program\n\n Protect personal files with a powerful vigenere cipher\n and optional password for additional strength.\n\n  Austin Voecks, Summer 2014")
+       (label "LockNut: personal file encryption program\n\n Protect personal files with a powerful Vigenere \n cipher using password verification.\n\n  Austin Voecks, Summer 2014\n")
        (font my-font)
        (parent info-frame)
+       ))
+
+(define readme-button
+  (new button%
+       (label "View readme")
+       (parent info-frame)
+       (horiz-margin 35)
+       (callback (lambda (b e)
+                   (system "notepad.exe LockNutReadme.txt")))
        ))
 
 (send main-frame create-status-line)
