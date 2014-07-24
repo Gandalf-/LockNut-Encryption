@@ -181,6 +181,9 @@
   (letrec ((password (send passcode-field get-value))
            (no-pass? (equal? password "")))
     
+    ;Password changes onto other passcode fields
+    (send create-file-passcode-field set-value password)
+    
     ;If password is blank, set it to a dummy value so verification works properly
     (when no-pass?
       (set! password "Qa30EfdB5h"))
@@ -231,6 +234,9 @@
   ;Get passcode
   (letrec ((password (send passcode-field get-value))
            (no-pass? (equal? password "")))
+    
+    ;Password changes onto other passcode fields
+    (send create-file-passcode-field set-value password)
     
     ;If password is blank, set it to a dummy value so verification works properly
     (when no-pass?
@@ -349,6 +355,9 @@
                        (password (send create-file-passcode-field get-value))
                        (no-pass? (equal? password "")))
                 
+                ;Password changes onto other passcode fields
+                (send passcode-field set-value password)
+                
                 ;If password is blank, set it to a dummy value so verification works properly
                 (when no-pass?
                   (set! password "Qa30EfdB5h"))
@@ -430,7 +439,7 @@
 ;Message explaining details
 (define create-file-message
   (new message%
-       (label "\nSample text")
+       (label "\nExplaination of create-file")
        (font my-font)
        (parent create-file-frame)
        ))
