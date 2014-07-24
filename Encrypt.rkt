@@ -1,5 +1,9 @@
 #lang racket
 
+;LockNut Encryption Program
+;Austin Voecks, Summer 2014
+;----------------------------------------------------------------------
+
 (require racket/gui)
 (require racket/port)
 
@@ -167,6 +171,106 @@
     ))
 
 
+;RUN-ENCRYPT-DECRYPT
+; Checks the password field, prompts the user to
+; choose a file, detect where to encrypt or decrypt,
+; pass user options along to encrypt()
+;---------------------------------------------
+(define (run-encrypt-decrypt)
+  ;Get passcode
+  (letrec ((password (send passcode-field get-value))
+           (no-pass? (equal? password "")))
+    
+    ;If password is blank, set it to a dummy value so verification works properly
+    (when no-pass?
+      (set! password "Qa30EfdB5h"))
+    
+    ;Check if password is being used as the cipher key
+    (if (send password-is-key-checkbox get-value)
+        ;Use password as key
+        (begin
+          (set! key-list (password->key-list (send passcode-field get-value)))
+          (set! solver-list (create-solver key-list)))
+        ;Use default
+        (begin
+          (set! key-list default-key)
+          (set! solver-list (create-solver key-list))))
+    
+    ;Get file choice
+    (let ((chosen-file (get-file)))
+      (if (equal? chosen-file #f)
+          (send main-frame set-status-text "No file chosen")
+          (begin
+            (set! chosen-file (path->string chosen-file))
+            
+            ;Decrypt .locknut files, encrypt all other files
+            (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                
+                (begin
+                  (send main-frame set-status-text "Decrypting...")
+                  ;Run decryption
+                  (if (decrypt-file chosen-file password #f)
+                      ;Success
+                      (send main-frame set-status-text "Finished decrypting!")
+                      ;Invalid password, nothing done
+                      (send main-frame set-status-text "Invalid password")))
+                
+                (begin
+                  (send main-frame set-status-text "Encrypting...")
+                  (encrypt-file chosen-file password)
+                  (send main-frame set-status-text "Finished encrypting!")))
+            
+            ))
+      )))
+
+;GLANCE
+; Decrypts a file using the optional password,
+; but just opens it in notepad. Decrypted file isn't saved
+;---------------------------------------------
+(define (glance)
+  ;Get passcode
+  (letrec ((password (send passcode-field get-value))
+           (no-pass? (equal? password "")))
+    
+    ;If password is blank, set it to a dummy value so verification works properly
+    (when no-pass?
+      (set! password "Qa30EfdB5h"))
+    
+    ;Check if password is being used as the cipher key
+    (if (send password-is-key-checkbox get-value)
+        ;Use password as key
+        (begin
+          (set! key-list (password->key-list (send passcode-field get-value)))
+          (set! solver-list (create-solver key-list)))
+        ;Use default
+        (begin
+          (set! key-list default-key)
+          (set! solver-list (create-solver key-list))))
+    
+    ;Get file choice
+    (let ((chosen-file (get-file)))
+      (if (equal? chosen-file #f)
+          (send main-frame set-status-text "No file chosen")
+          (begin
+            (set! chosen-file (path->string chosen-file))
+            
+            ;Decrypt .locknut files, open in notepad
+            ;Check if file is .locknut extension
+            (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                (begin
+                  (send main-frame set-status-text "Decrypting...")
+                  (if (decrypt-file chosen-file password #t)
+                      ;Success
+                      (send main-frame set-status-text "Finished decrypting!")
+                      ;Invalid password, nothing done
+                      (send main-frame set-status-text "Invalid password")))
+                ;Wrong extension
+                (send main-frame set-status-text "File must be encrypted .locknut file"))
+            
+            ))
+      ))
+  )
+
 ;GUI SETUP
 ;---------------------------------------------
 
@@ -174,7 +278,7 @@
                   10
                   'modern))
 
-;MAIN-FRAME
+;MAIN-WINDOW
 ;---------------------------------------------
 (define main-frame 
   (new frame%
@@ -214,102 +318,18 @@
        (parent panel)
        (horiz-margin 10)
        (callback (lambda (button event)
-                   ;Get passcode
-                   (letrec ((password (send passcode-field get-value))
-                            (no-pass? (equal? password "")))
-                     
-                     ;If password is blank, set it to a dummy value so verification works properly
-                     (when no-pass?
-                       (set! password "Qa30EfdB5h"))
-                     
-                     ;Check if password is being used as the cipher key
-                     (if (send password-is-key-checkbox get-value)
-                         ;Use password as key
-                         (begin
-                           (set! key-list (password->key-list (send passcode-field get-value)))
-                           (set! solver-list (create-solver key-list)))
-                         ;Use default
-                         (begin
-                           (set! key-list default-key)
-                           (set! solver-list (create-solver key-list))))
-                     
-                     ;Get file choice
-                     (let ((chosen-file (get-file)))
-                       (if (equal? chosen-file #f)
-                           (send main-frame set-status-text "No file chosen")
-                           (begin
-                             (set! chosen-file (path->string chosen-file))
-                             
-                             ;Decrypt .locknut files, encrypt all other files
-                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                                 
-                                 (begin
-                                   (send main-frame set-status-text "Decrypting...")
-                                   ;Run decryption
-                                   (if (decrypt-file chosen-file password #f)
-                                       ;Success
-                                       (send main-frame set-status-text "Finished decrypting!")
-                                       ;Invalid password, nothing done
-                                       (send main-frame set-status-text "Invalid password")))
-                                 
-                                 (begin
-                                   (send main-frame set-status-text "Encrypting...")
-                                   (encrypt-file chosen-file password)
-                                   (send main-frame set-status-text "Finished encrypting!")))
-                             
-                             ))
-                       ))
-                   ))))
+                   (run-encrypt-decrypt)))
+       ))
 
-;Decrypts a file using the optional password, but just opens it in notepad. Decrypted file isn't saved
+;Button for glance procedure
 (define glance-button
   (new button%
        (label "Glance")
        (parent panel)
        (horiz-margin 10)
        (callback (lambda (button event)
-                   ;Get passcode
-                   (letrec ((password (send passcode-field get-value))
-                            (no-pass? (equal? password "")))
-                     
-                     ;If password is blank, set it to a dummy value so verification works properly
-                     (when no-pass?
-                       (set! password "Qa30EfdB5h"))
-                     
-                     ;Check if password is being used as the cipher key
-                     (if (send password-is-key-checkbox get-value)
-                         ;Use password as key
-                         (begin
-                           (set! key-list (password->key-list (send passcode-field get-value)))
-                           (set! solver-list (create-solver key-list)))
-                         ;Use default
-                         (begin
-                           (set! key-list default-key)
-                           (set! solver-list (create-solver key-list))))
-                     
-                     ;Get file choice
-                     (let ((chosen-file (get-file)))
-                       (if (equal? chosen-file #f)
-                           (send main-frame set-status-text "No file chosen")
-                           (begin
-                             (set! chosen-file (path->string chosen-file))
-                             
-                             ;Decrypt .locknut files, open in notepad
-                             ;Check if file is .locknut extension
-                             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                                 (begin
-                                   (send main-frame set-status-text "Decrypting...")
-                                   (if (decrypt-file chosen-file password #t)
-                                       ;Success
-                                       (send main-frame set-status-text "Finished decrypting!")
-                                       ;Invalid password, nothing done
-                                       (send main-frame set-status-text "Invalid password")))
-                                 ;Wrong extension
-                                 (send main-frame set-status-text "File must be encrypted .locknut file"))
-                             
-                             ))
-                       )))
-                 )))
+                   (glance)))
+       ))
 
 
 ;OPTIONS WINDOW

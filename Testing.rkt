@@ -1,5 +1,8 @@
 #lang racket
 
+(require racket/port)
+(require racket/gui)
+
 ;Prints x to a file
 (define (print-this x name)
   (call-with-output-file* name #:exists 'replace
@@ -23,4 +26,14 @@
   (if (= i 25)
       output
       (loop (+ i 1) (flatten (cons output (random 100))))))
+
+;(display (get-file))
+(define x (char->integer #\Ý))
+
+(integer->char (- (char->integer (integer->char (+ 1 x))) 1))
+
+
+
+
+
       
