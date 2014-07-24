@@ -316,7 +316,7 @@
   (new button% 
        (label "Encrypt/Decrypt File")
        (parent panel)
-       (horiz-margin 10)
+       (horiz-margin 17)
        (callback (lambda (button event)
                    (run-encrypt-decrypt)))
        ))
@@ -326,9 +326,113 @@
   (new button%
        (label "Glance")
        (parent panel)
-       (horiz-margin 10)
+       (horiz-margin 8)
        (callback (lambda (button event)
                    (glance)))
+       ))
+
+;CREATE NEW ENCRYPTED FILE
+;-----------------------------------------------
+(define (create-file)
+  (let ((given-file-name (send filename-field get-value)))
+    ;Check if file name is not blank
+    (if (equal? given-file-name "")
+        ;Invalid file name
+        (send create-file-frame set-status-text "File name must not be blank")
+        
+        ;Check if file name already exists
+        (if (file-exists? given-file-name)
+            (send create-file-frame set-status-text "File of that name already exists")
+            
+            (begin
+              (letrec ((full-file-name (string-append given-file-name ".txt"))
+                       (password (send create-file-passcode-field get-value))
+                       (no-pass? (equal? password "")))
+                
+                ;If password is blank, set it to a dummy value so verification works properly
+                (when no-pass?
+                  (set! password "Qa30EfdB5h"))
+                
+                ;Check if password is being used as the cipher key
+                (if (send password-is-key-checkbox get-value)
+                    ;Use password as key
+                    (begin
+                      (set! key-list (password->key-list (send passcode-field get-value)))
+                      (set! solver-list (create-solver key-list)))
+                    ;Use default
+                    (begin
+                      (set! key-list default-key)
+                      (set! solver-list (create-solver key-list))))
+                
+                ;Create file
+                (print-this "" full-file-name)
+                ;Open file
+                (system (string-append "notepad.exe " full-file-name))
+                ;Hide create-file window
+                (send create-file-frame show #f)
+                
+                (send main-frame set-status-text "Encrypting...")
+                (encrypt-file full-file-name password)
+                (send main-frame set-status-text "Finished encrypting!")
+                ))
+            ))
+    ))
+
+(define create-file-frame
+  (new frame%
+       (label "New Encrypted File")
+       (min-width 350)
+       (min-height 150)
+       ))
+
+(send create-file-frame create-status-line)
+
+;Button that opens create-file-frame
+(define create-file-button
+  (new button%
+       (label "Create File")
+       (parent lower-panel)
+       (horiz-margin 8)
+       (callback (lambda (button event)
+                   (send create-file-frame show #t)))
+       ))
+
+;Panel for create-file buttons
+(define create-file-panel (instantiate vertical-panel% (create-file-frame)
+                            (stretchable-height #f)
+                            ))
+
+;Filename field
+(define filename-field
+  (new text-field%
+       (label "Filename")
+       (parent create-file-panel)
+       (font my-font)
+       ))
+
+;Create file password
+(define create-file-passcode-field
+  (new text-field%
+       (label "Password")
+       (parent create-file-panel)
+       (font my-font)
+       ))
+
+;Generate new file button
+(define generate-file-button
+  (new button%
+       (label "Create")
+       (parent create-file-panel)
+       (callback (lambda (button event)
+                   (create-file)))
+       ))
+
+;Message explaining details
+(define create-file-message
+  (new message%
+       (label "\nSample text")
+       (font my-font)
+       (parent create-file-frame)
        ))
 
 
@@ -348,7 +452,7 @@
   (new button%
        (label "Options")
        (parent lower-panel)
-       (horiz-margin 35)
+       (horiz-margin 8)
        (callback (lambda (button event)
                    (send options-frame show #t)))
        ))
@@ -400,7 +504,7 @@
   (new button%
        (label "Info")
        (parent lower-panel)
-       (horiz-margin 25)
+       (horiz-margin 8)
        (callback (lambda (button event)
                    (send info-frame show #t)))
        ))
