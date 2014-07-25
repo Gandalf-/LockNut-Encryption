@@ -38,6 +38,7 @@
 (define D '(61 23 76 35 86 47 3 91 6 79 39 56 31 77 54 96 90 20 81 67 31 65 65 56 61))
 
 (define default-key (append A B C D))
+(define default-password "QUz7x5SW3dvpuIhCRjXgNXdFJU8a")
 (define key-list default-key)
 (define solver-list (create-solver key-list))
 
@@ -47,6 +48,21 @@
     (if (empty? input)
         output
         (loop (cdr input) (flatten (cons output (char->integer (car input))))))))
+
+;Add the password-key-list to the default key-list
+(define (alter-key-list default-key-list pass-input-list)
+  (let loop ((default-list default-key-list) (pass-list pass-input-list) (output '()))
+    (if (empty? default-list)
+        output
+        (begin
+          (when (empty? pass-list)
+            (set! pass-list pass-input-list))
+          (loop (cdr default-list)
+                (cdr pass-list) 
+                (flatten (cons output (+ (car default-list)
+                                         (car pass-list)))))
+          ))))
+
 
 
 ;ENCRYPTION ALGORITHM
@@ -68,12 +84,16 @@
             (set! current-key-list key-list))
           
           ;Create the new shift amount from the key-list
-          (let ((new-shift-amount (+ (car current-key-list) 
+          (let ((shifted-integer (+ (car current-key-list) 
                                      (char->integer (car remaining-input)))))
+            
+            ;Incorrect password results in negative shift amount check
+            (when (> 0 shifted-integer)
+              (set! shifted-integer 0))
             
             ;Continue loop
             (loop (flatten (cons output-list
-                                 (integer->char new-shift-amount)))
+                                 (integer->char shifted-integer)))
                   (cdr remaining-input)
                   (cdr current-key-list)
                   )))
@@ -90,9 +110,8 @@
         ;Add .locknut extension
         (new-file-name (string-append input-file-name ".locknut")))
     
-    ;If checking password, add the password onto the beginning of the chars-list
-    (when (send check-password-checkbox get-value)
-      (set! chars-list (append (string->list password) chars-list)))
+    ;Add the password onto the beginning of the chars-list
+    (set! chars-list (append (string->list password) chars-list))
     
     ;Remove the older version of the output file if necessary
     (when (file-exists? new-file-name)
@@ -120,55 +139,38 @@
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
     
-    ;Start decryption 
+    ;Decrypt the file with the given password
     (let ((decrypted-file (list->string (encrypt chars-list solver-list password)) ))
       
+      ;Check whether to glance or save decrypt file
       (if (equal? #t glance?)
-          ;Glance : decrypt and open in notepad
-          (if (send check-password-checkbox get-value)
+          
+          ;Verify password and glance
+          (if (equal? (substring decrypted-file 0 (string-length password)) password)
               
-              ;Verify password
-              (if (equal? (substring decrypted-file 0 (string-length password)) password)
-                  
-                  ;Valid password, remove password from beginning and show in notepad
-                  (begin
-                    (print-this (substring decrypted-file (string-length password) (string-length decrypted-file))  "temp.txt")
-                    (system "notepad.exe temp.txt")
-                    (delete-file "temp.txt"))
-                  
-                  ;Invalid password
-                  #f)
-              
-              ;Don't verify password
+              ;Valid password, remove password from beginning and show in notepad
               (begin
-                ;Remove password from beginning and show in notepad
                 (print-this (substring decrypted-file (string-length password) (string-length decrypted-file))  "temp.txt")
                 (system "notepad.exe temp.txt")
-                (delete-file "temp.txt")))
+                (delete-file "temp.txt"))
+              
+              ;Invalid password
+              #f)
           
-          ;Don't glance : decrypt and print
-          (if (send check-password-checkbox get-value)
+          ;Verify password and save decrypted file
+          (if (equal? (substring decrypted-file 0 (string-length password)) password)
               
-              ;Verify password
-              (if (equal? (substring decrypted-file 0 (string-length password)) password)
-                  
-                  ;Valid password
-                  (begin
-                    (print-this (substring decrypted-file (string-length password) (string-length decrypted-file)) input-file-name)
-                    ;Rename the encrypted version
-                    (rename-file-or-directory input-file-name new-file-name))
-                  
-                  ;Invalid password
-                  #f)
-              
-              ;Don't verify password
+              ;Valid password
               (begin
                 (print-this (substring decrypted-file (string-length password) (string-length decrypted-file)) input-file-name)
                 ;Rename the encrypted version
                 (rename-file-or-directory input-file-name new-file-name))
-              )
-          ))
-    ))
+              
+              ;Invalid password
+              #f)
+          )
+      ))
+  )
 
 
 ;RUN-ENCRYPT-DECRYPT
@@ -186,17 +188,18 @@
     
     ;If password is blank, set it to a dummy value so verification works properly
     (when no-pass?
-      (set! password "Qa30EfdB5h"))
+      (set! password default-password))
     
     ;Check if password is being used as the cipher key
     (if (send password-is-key-checkbox get-value)
         ;Use password as key
         (begin
-          (set! key-list (password->key-list (send passcode-field get-value)))
+          (set! key-list (password->key-list password))
           (set! solver-list (create-solver key-list)))
-        ;Use default
+        ;Use default key, which includes the password
         (begin
-          (set! key-list default-key)
+          ;Modify the key-list with the password
+          (set! key-list (alter-key-list default-key (password->key-list password)))
           (set! solver-list (create-solver key-list))))
     
     ;Get file choice
@@ -240,23 +243,26 @@
     
     ;If password is blank, set it to a dummy value so verification works properly
     (when no-pass?
-      (set! password "Qa30EfdB5h"))
+      (set! password default-password))
     
     ;Check if password is being used as the cipher key
     (if (send password-is-key-checkbox get-value)
         ;Use password as key
         (begin
-          (set! key-list (password->key-list (send passcode-field get-value)))
+          (set! key-list (password->key-list password))
           (set! solver-list (create-solver key-list)))
         ;Use default
         (begin
-          (set! key-list default-key)
+          ;Modify the key-list with the password
+          (set! key-list (alter-key-list default-key (password->key-list password)))
           (set! solver-list (create-solver key-list))))
     
     ;Get file choice
     (let ((chosen-file (get-file)))
+      ;Valid file choice?
       (if (equal? chosen-file #f)
           (send main-frame set-status-text "No file chosen")
+          
           (begin
             (set! chosen-file (path->string chosen-file))
             
@@ -347,7 +353,7 @@
         (send create-file-frame set-status-text "File name must not be blank")
         
         ;Check if file name already exists
-        (if (file-exists? given-file-name)
+        (if (file-exists? (string-append given-file-name ".txt"))
             (send create-file-frame set-status-text "File of that name already exists")
             
             (begin
@@ -360,7 +366,7 @@
                 
                 ;If password is blank, set it to a dummy value so verification works properly
                 (when no-pass?
-                  (set! password "Qa30EfdB5h"))
+                  (set! password default-password))
                 
                 ;Check if password is being used as the cipher key
                 (if (send password-is-key-checkbox get-value)
@@ -439,7 +445,7 @@
 ;Message explaining details
 (define create-file-message
   (new message%
-       (label "\nExplaination of create-file")
+       (label "\nFilename: name of the new encrypted file \nPassword: optional password used during encryption \n Create : Creates, opens file. Make your edits\n and save, then close notepad. File is now encrypted.")
        (font my-font)
        (parent create-file-frame)
        ))
@@ -482,20 +488,6 @@
                        (send options-frame set-status-text "Warning: A short password greatly weakens the encryption")
                        ;Use default
                        (send options-frame set-status-text "Encryption key set back to default value"))))
-       ))
-
-;Check password
-(define check-password-checkbox
-  (new check-box%
-       (label "Verify password before decryption    ")
-       (parent options-panel)
-       (value #t)
-       (callback (lambda (button event)
-                   (if (send check-password-checkbox get-value)
-                       ;Verify password
-                       (send options-frame set-status-text "Will verify password used to encrypt before decryption")
-                       ;Don't verify password
-                       (send options-frame set-status-text "Warning: incorrect password may ruin the file permanently."))))
        ))
 
 
