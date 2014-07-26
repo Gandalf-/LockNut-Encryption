@@ -1,15 +1,21 @@
 #lang racket
 
+;Encrypt
 ;LockNut Encryption Program
 ;Austin Voecks, Summer 2014
+
+;Functions that work between the algorithm and the GUI, handle file IO
 ;----------------------------------------------------------------------
 
 (require racket/gui)
 (require racket/port)
+(require "Encrypt-Algorithm.rkt")
 
+;Provisions to LockNut.rkt
 (provide run-encrypt-decrypt)
 (provide glance)
 (provide create-file)
+
 
 ;FILE IO
 ;----------------------------------------------------------------------
@@ -23,115 +29,6 @@
   (call-with-output-file* name #:exists 'replace
                           (lambda (output-port)
                             (display x output-port))))
-
-
-;ENCRYPTION SETUP
-;----------------------------------------------------------------------
-
-;Creates the inverse of the key-list for solving
-(define (create-solver key-list)
-  (let loop ((input key-list) (output '()))
-    (if (empty? input)
-        output
-        (loop (cdr input) (flatten (cons output (* -1 (car input)))))
-        )))
-
-;Generate a key-list (list of integers indicating shift amounts) from the given password
-(define (password->key-list password)
-  (let loop ((input (string->list password)) (output '() ))
-    (if (empty? input)
-        output
-        (loop (cdr input) (flatten (cons output (char->integer (car input)))))
-        )))
-
-;Add the password-key-list to the default key-list, to make it unique to the given password
-(define (alter-key-list default-key-list pass-input-list)
-  (let loop ((default-list default-key-list) (pass-list pass-input-list) (output '()))
-    (if (empty? default-list)
-        output
-        (begin
-          (when (empty? pass-list)
-            (set! pass-list pass-input-list))
-          (loop (cdr default-list)
-                (cdr pass-list) 
-                (flatten (cons output (+ (car default-list)
-                                         (car pass-list)))))
-          ))))
-
-(define (generate-key-and-solver password password-is-key?-value)
-  ;Check if password is being used as the cipher key
-  (if password-is-key?-value
-      ;Use password as key
-      (begin
-        (set! key-list (password->key-list password))
-        (set! solver-list (create-solver key-list)))
-      ;Use default key, which includes the password
-      (begin
-        ;Modify the key-list with the password
-        (set! key-list (alter-key-list default-key (password->key-list password)))
-        (set! solver-list (create-solver key-list)))
-      ))
-
-
-;DEFINITIONS
-;----------------------------------------------------------------------
-
-;Define default-key, key-list and solver-list
-(define A '(28 72 99 85 89 21 40 86 42 26 23 14 50 6 28 51 79 7 34 90 63 90 37 81 18))
-(define B '(97 40 51 70 55 53 97 64 12 96 19 71 16 7 9 60 26 5 46 13 96 60 89 85 81))
-(define C '(84 10 89 95 91 90 83 69 57 33 72 29 46 10 77 49 89 82 41 0 5 96 20 69 99))
-(define D '(61 23 76 35 86 47 3 91 6 79 39 56 31 77 54 96 90 20 81 67 31 65 65 56 61))
-
-(define default-key (append A B C D))
-(define default-password "QUz7x5SW3dvpuIhCRjXgNXdFJU8a")
-
-;Verification character is tacked onto the end of the password given during encryption.
-; It's used to make sure the an incorrect password is allowed to decrypt because its a
-; substring of the correct password.
-(define verification-char "훘")
-
-;Both uniquely assigned during encrypt/decrypt
-(define key-list '() )
-(define solver-list '() )
-
-
-
-;ENCRYPTION ALGORITHM
-;----------------------------------------------------------------------
-; Takes a list of characters and returns a list of encrypted characters  
-(define (encrypt input-list key-list password)
-  
-  ;Run algorithm
-  (let loop ((output-list '() )
-             (remaining-input input-list)
-             (current-key-list key-list)
-             )
-    
-    (if (empty? remaining-input)
-        output-list
-        
-        (begin
-          ;Refill the key-list when it's empty
-          (when (empty? current-key-list)
-            (set! current-key-list key-list))
-          
-          ;Create the new shifted-integer from the current key-list value added
-          ; to the current input-list value
-          (let ((shifted-integer (+ (car current-key-list) 
-                                    (char->integer (car remaining-input)))))
-            
-            ;Incorrect password results in negative shift amount check
-            ; Default to 0, the result will be incorrect anyway
-            (when (> 0 shifted-integer)
-              (set! shifted-integer 0))
-            
-            ;Continue loop with new encrypted character added to the output list
-            (loop (flatten (cons output-list
-                                 (integer->char shifted-integer)))
-                  (cdr remaining-input)
-                  (cdr current-key-list)
-                  )))
-        )))
 
 
 ;FILE ENCRYPTION
@@ -222,42 +119,34 @@
 ; pass user options along to encrypt()
 ;---------------------------------------------
 (define (run-encrypt-decrypt password password-is-key?-value)
-  ;Get passcode
-  (let (;(password (send passcode-field get-value))
-           (no-pass? (equal? password "")))
-    
-    ;If password is blank, set it to default-password
-    (when no-pass?
-      (set! password default-password))
-    
-    (generate-key-and-solver password password-is-key?-value)
-    
-    ;Get file choice
-    (let ((chosen-file (get-file)))
-      (if (equal? chosen-file #f)
-          "No file chosen"
+  
+  ;Check for blank password, then generate the cipher key-list and solver-list
+  (set! password (generate-key-and-solver password password-is-key?-value))
+  
+  ;Get file choice
+  (let ((chosen-file (get-file)))
+    (if (equal? chosen-file #f)
+        "No file chosen"
+        
+        (begin
+          (set! chosen-file (path->string chosen-file))
           
-          (begin
-            (set! chosen-file (path->string chosen-file))
-            
-            ;Decrypt .locknut files, encrypt all other files
-            (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                ;Run decryption
-                (begin
-                  ;(send main-frame set-status-text "Decrypting...")
-                  (if (decrypt-file chosen-file password #f)
-                      ;Success
-                      "Finished decrypting!"
-                      
-                      ;Invalid password, nothing done
-                      "Invalid password"))
-                
-                ;Run encryption
-                (begin
-                  (encrypt-file chosen-file password)
-                  "Finished encrypting!"))
-            ))
-      )))
+          ;Decrypt .locknut files, encrypt all other files
+          (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+              ;Run decryption
+              (if (decrypt-file chosen-file password #f)
+                  ;Success
+                  "Finished decrypting!"
+                  
+                  ;Invalid password, nothing done
+                  "Invalid password")
+              
+              ;Run encryption
+              (begin
+                (encrypt-file chosen-file password)
+                "Finished encrypting!"))
+          ))
+    ))
 
 
 ;GLANCE
@@ -265,47 +154,40 @@
 ; but just opens it in notepad. Decrypted file isn't saved
 ;---------------------------------------------
 (define (glance password password-is-key?-value)
-  ;Get passcode
-  (letrec (;(password (send passcode-field get-value))
-           (no-pass? (equal? password "")))
-    
-    ;If password is blank, set it to a dummy value so verification works properly
-    (when no-pass?
-      (set! password default-password))
-    
-    (generate-key-and-solver password password-is-key?-value)
-    
-    ;Get file choice
-    (let ((chosen-file (get-file)))
-      ;Valid file choice?
-      (if (equal? chosen-file #f)
-          "No file chosen"
+  
+  ;Check for blank password, then generate the cipher key-list and solver-list
+  (set! password (generate-key-and-solver password password-is-key?-value))
+  
+  ;Get file choice
+  (let ((chosen-file (get-file)))
+    ;Valid file choice?
+    (if (equal? chosen-file #f)
+        "No file chosen"
+        
+        (begin
+          (set! chosen-file (path->string chosen-file))
           
-          (begin
-            (set! chosen-file (path->string chosen-file))
-            
-            ;Decrypt .locknut files, open in notepad
-            ;Check if file is .locknut extension
-            (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                (begin
-                  (if (decrypt-file chosen-file password #t)
-                      ;Success
-                      "Finished decrypting!"
-                      
-                      ;Invalid password, nothing done
-                      "Invalid password"))
-                
-                ;Wrong extension
-                "File must be encrypted .locknut file")
-            ))
-      ))
-  )
+          ;Decrypt .locknut files, open in notepad
+          ;Check if file is .locknut extension
+          (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+              (begin
+                (if (decrypt-file chosen-file password #t)
+                    ;Success
+                    "Finished decrypting!"
+                    
+                    ;Invalid password, nothing done
+                    "Invalid password"))
+              
+              ;Wrong extension
+              "File must be encrypted .locknut file")
+          ))
+    ))
+
 
 
 ;CREATE NEW ENCRYPTED FILE
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value)
-  ;(let ((given-file-name (send filename-field get-value)))
   ;Check if file name is not blank
   (if (equal? given-file-name "")
       ;Invalid file name
@@ -315,32 +197,19 @@
       (if (file-exists? (string-append given-file-name ".txt"))
           "File of that name already exists"
           
-          (begin
-            ;(send create-file-frame set-status-text "Creating file...")
+          (let ((full-file-name (string-append given-file-name ".txt")))
+            ;Check for blank password, then generate the cipher key-list and solver-list
+            (set! password (generate-key-and-solver password password-is-key?-value))
             
-            (letrec ((full-file-name (string-append given-file-name ".txt"))
-                     ;(password (send create-file-passcode-field get-value))
-                     (no-pass? (equal? password "")))
-              
-              ;If password is blank, set it to a dummy value so verification works properly
-              (when no-pass?
-                (set! password default-password))
-              
-              (generate-key-and-solver password password-is-key?-value)
-              
-              ;Create file
-              (print-this "" full-file-name)
-              ;Open file
-              (system (string-append "notepad.exe " full-file-name))
-              ;                ;Hide create-file window
-              ;                (send create-file-frame show #f)
-              
-              ;(send main-frame set-status-text "Encrypting...")
-              (encrypt-file full-file-name password)
-              "Finished encrypting!"
-              ))
-          ))
-  )
+            ;Create file
+            (print-this "" full-file-name)
+            ;Open file
+            (system (string-append "notepad.exe " full-file-name))
+            ;Encrypt file
+            (encrypt-file full-file-name password)
+            "Finished encrypting!"
+            ))
+      ))
 
 
 

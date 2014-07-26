@@ -1,5 +1,12 @@
 #lang racket
 
+;LockNut
+;LockNut Encryption Program
+;Austin Voecks, Summer 2014
+
+;GUI
+;--------------------------------------------
+
 (require racket/gui)
 (require "Encrypt.rkt")
 
