@@ -7,6 +7,10 @@
 (require racket/gui)
 (require racket/port)
 
+(provide run-encrypt-decrypt)
+(provide glance)
+(provide create-file)
+
 ;FILE IO
 ;----------------------------------------------------------------------
 
@@ -54,9 +58,9 @@
                                          (car pass-list)))))
           ))))
 
-(define (generate-key-and-solver password)
+(define (generate-key-and-solver password password-is-key?-value)
   ;Check if password is being used as the cipher key
-  (if (send password-is-key-checkbox get-value)
+  (if password-is-key?-value
       ;Use password as key
       (begin
         (set! key-list (password->key-list password))
@@ -190,7 +194,7 @@
               (begin
                 (print-this (substring decrypted-file (+ 1 (string-length password)) (string-length decrypted-file))  "Glance.txt")
                 (system "notepad.exe Glance.txt")
-                (delete-file "temp.txt"))
+                (delete-file "Glance.txt"))
               
               ;Invalid password
               #f)
@@ -217,24 +221,22 @@
 ; choose a file, detect where to encrypt or decrypt,
 ; pass user options along to encrypt()
 ;---------------------------------------------
-(define (run-encrypt-decrypt)
+(define (run-encrypt-decrypt password password-is-key?-value)
   ;Get passcode
-  (letrec ((password (send passcode-field get-value))
+  (let (;(password (send passcode-field get-value))
            (no-pass? (equal? password "")))
-    
-    ;Push password changes into other passcode fields
-    (send create-file-passcode-field set-value password)
     
     ;If password is blank, set it to default-password
     (when no-pass?
       (set! password default-password))
     
-    (generate-key-and-solver password)
+    (generate-key-and-solver password password-is-key?-value)
     
     ;Get file choice
     (let ((chosen-file (get-file)))
       (if (equal? chosen-file #f)
-          (send main-frame set-status-text "No file chosen")
+          "No file chosen"
+          
           (begin
             (set! chosen-file (path->string chosen-file))
             
@@ -242,18 +244,18 @@
             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
                 ;Run decryption
                 (begin
-                  (send main-frame set-status-text "Decrypting...")
+                  ;(send main-frame set-status-text "Decrypting...")
                   (if (decrypt-file chosen-file password #f)
                       ;Success
-                      (send main-frame set-status-text "Finished decrypting!")
+                      "Finished decrypting!"
+                      
                       ;Invalid password, nothing done
-                      (send main-frame set-status-text "Invalid password")))
+                      "Invalid password"))
                 
                 ;Run encryption
                 (begin
-                  (send main-frame set-status-text "Encrypting...")
                   (encrypt-file chosen-file password)
-                  (send main-frame set-status-text "Finished encrypting!")))
+                  "Finished encrypting!"))
             ))
       )))
 
@@ -262,25 +264,22 @@
 ; Decrypts a file using the optional password,
 ; but just opens it in notepad. Decrypted file isn't saved
 ;---------------------------------------------
-(define (glance)
+(define (glance password password-is-key?-value)
   ;Get passcode
-  (letrec ((password (send passcode-field get-value))
+  (letrec (;(password (send passcode-field get-value))
            (no-pass? (equal? password "")))
-    
-    ;Password changes onto other passcode fields
-    (send create-file-passcode-field set-value password)
     
     ;If password is blank, set it to a dummy value so verification works properly
     (when no-pass?
       (set! password default-password))
     
-    (generate-key-and-solver password)
+    (generate-key-and-solver password password-is-key?-value)
     
     ;Get file choice
     (let ((chosen-file (get-file)))
       ;Valid file choice?
       (if (equal? chosen-file #f)
-          (send main-frame set-status-text "No file chosen")
+          "No file chosen"
           
           (begin
             (set! chosen-file (path->string chosen-file))
@@ -289,257 +288,60 @@
             ;Check if file is .locknut extension
             (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
                 (begin
-                  (send main-frame set-status-text "Decrypting...")
                   (if (decrypt-file chosen-file password #t)
                       ;Success
-                      (send main-frame set-status-text "Finished decrypting!")
+                      "Finished decrypting!"
+                      
                       ;Invalid password, nothing done
-                      (send main-frame set-status-text "Invalid password")))
+                      "Invalid password"))
+                
                 ;Wrong extension
-                (send main-frame set-status-text "File must be encrypted .locknut file"))
-            
+                "File must be encrypted .locknut file")
             ))
       ))
   )
 
-;GUI SETUP
-;---------------------------------------------
-
-(define my-font (make-object font%
-                  10
-                  'modern))
-
-;MAIN-WINDOW
-;---------------------------------------------
-(define main-frame 
-  (new frame%
-       (label "LockNut Encryption")
-       (stretchable-width #f)
-       (stretchable-height #f)
-       ))
-
-;Background, custom nut image
-(define background-image (new message% [parent main-frame] 
-                              (label (make-object bitmap% "Nut.jpg"))))
-
-;Panel for file encryption or decryption, glance, and passcode-field
-(define panel (instantiate horizontal-panel% (main-frame)
-                (stretchable-height #f)
-                ))
-
-;Panel for options and info
-(define lower-panel (instantiate horizontal-panel% (main-frame)
-                      (stretchable-height #f)
-                      ))
-
-;Gets optional password from user
-; Default is to generate a seed that alters the encryption algorithm's output
-; Option in option-panel to use password as the encryption key
-(define passcode-field
-  (new text-field%
-       (label "Password")
-       (parent main-frame)
-       (font my-font)
-       ))
-
-;Button for file encryption or decryption
-(define run-button
-  (new button% 
-       (label "Encrypt/Decrypt File")
-       (parent panel)
-       (horiz-margin 17)
-       (callback (lambda (button event)
-                   (run-encrypt-decrypt)))
-       ))
-
-;Button for glance procedure
-(define glance-button
-  (new button%
-       (label "Glance")
-       (parent panel)
-       (horiz-margin 8)
-       (callback (lambda (button event)
-                   (glance)))
-       ))
 
 ;CREATE NEW ENCRYPTED FILE
 ;-----------------------------------------------
-(define (create-file)
-  (let ((given-file-name (send filename-field get-value)))
-    ;Check if file name is not blank
-    (if (equal? given-file-name "")
-        ;Invalid file name
-        (send create-file-frame set-status-text "File name must not be blank")
-        
-        ;Check if file name already exists
-        (if (file-exists? (string-append given-file-name ".txt"))
-            (send create-file-frame set-status-text "File of that name already exists")
+(define (create-file given-file-name password password-is-key?-value)
+  ;(let ((given-file-name (send filename-field get-value)))
+  ;Check if file name is not blank
+  (if (equal? given-file-name "")
+      ;Invalid file name
+      "File name must not be blank"
+      
+      ;Check if file name already exists
+      (if (file-exists? (string-append given-file-name ".txt"))
+          "File of that name already exists"
+          
+          (begin
+            ;(send create-file-frame set-status-text "Creating file...")
             
-            (begin
-              (send create-file-frame set-status-text "Creating file...")
+            (letrec ((full-file-name (string-append given-file-name ".txt"))
+                     ;(password (send create-file-passcode-field get-value))
+                     (no-pass? (equal? password "")))
               
-              (letrec ((full-file-name (string-append given-file-name ".txt"))
-                       (password (send create-file-passcode-field get-value))
-                       (no-pass? (equal? password "")))
-                
-                ;Password changes onto other passcode fields
-                (send passcode-field set-value password)
-                
-                ;If password is blank, set it to a dummy value so verification works properly
-                (when no-pass?
-                  (set! password default-password))
-                
-                (generate-key-and-solver password)
-                
-                ;Create file
-                (print-this "" full-file-name)
-                ;Open file
-                (system (string-append "notepad.exe " full-file-name))
-                ;Hide create-file window
-                (send create-file-frame show #f)
-                
-                (send main-frame set-status-text "Encrypting...")
-                (encrypt-file full-file-name password)
-                (send main-frame set-status-text "Finished encrypting!")
-                ))
-            ))
-    ))
+              ;If password is blank, set it to a dummy value so verification works properly
+              (when no-pass?
+                (set! password default-password))
+              
+              (generate-key-and-solver password password-is-key?-value)
+              
+              ;Create file
+              (print-this "" full-file-name)
+              ;Open file
+              (system (string-append "notepad.exe " full-file-name))
+              ;                ;Hide create-file window
+              ;                (send create-file-frame show #f)
+              
+              ;(send main-frame set-status-text "Encrypting...")
+              (encrypt-file full-file-name password)
+              "Finished encrypting!"
+              ))
+          ))
+  )
 
-(define create-file-frame
-  (new frame%
-       (label "New Encrypted File")
-       (min-width 350)
-       (min-height 150)
-       ))
-
-(send create-file-frame create-status-line)
-
-;Button that opens create-file-frame
-(define create-file-button
-  (new button%
-       (label "Create File")
-       (parent lower-panel)
-       (horiz-margin 8)
-       (callback (lambda (button event)
-                   (send create-file-frame show #t)))
-       ))
-
-;Panel for create-file buttons
-(define create-file-panel (instantiate vertical-panel% (create-file-frame)
-                            (stretchable-height #f)
-                            ))
-
-;Filename field
-(define filename-field
-  (new text-field%
-       (label "Filename")
-       (parent create-file-panel)
-       (font my-font)
-       ))
-
-;Create file password
-(define create-file-passcode-field
-  (new text-field%
-       (label "Password")
-       (parent create-file-panel)
-       (font my-font)
-       ))
-
-;Generate new file button
-(define generate-file-button
-  (new button%
-       (label "Create")
-       (parent create-file-panel)
-       (callback (lambda (button event)
-                   (create-file)))
-       ))
-
-;Message explaining details
-(define create-file-message
-  (new message%
-       (label "\nFilename: name of the new encrypted file \nPassword: optional password used during encryption \n Create : Creates, opens file. Make your edits\n and save, then close notepad. File is now encrypted.")
-       (font my-font)
-       (parent create-file-frame)
-       ))
-
-
-;OPTIONS WINDOW
-;-----------------------------------------------
-(define options-frame
-  (new frame%
-       (label "Advanced Options")
-       (min-width 350)
-       (min-height 150)
-       ))
-
-(send options-frame create-status-line)
-
-;Button that opens advanced options window
-(define options-button
-  (new button%
-       (label "Options")
-       (parent lower-panel)
-       (horiz-margin 8)
-       (callback (lambda (button event)
-                   (send options-frame show #t)))
-       ))
-
-;Panel for options buttons
-(define options-panel (instantiate vertical-panel% (options-frame)
-                        (stretchable-height #f)
-                        ))
-
-;Use password as the Vigenere key
-(define password-is-key-checkbox
-  (new check-box%
-       (label "Use password as Vigenere cipher key")
-       (parent options-panel)
-       (callback (lambda (button event)
-                   (if (send password-is-key-checkbox get-value)
-                       ;Use password as key
-                       (send options-frame set-status-text "Warning: A short password greatly weakens the encryption")
-                       ;Use default
-                       (send options-frame set-status-text "Encryption key set back to default values"))))
-       ))
-
-
-;INFORMATION WINDOW
-;-----------------------------------------------
-(define info-frame
-  (new frame%
-       (label "Information")
-       (min-width 200)
-       (min-height 100)
-       ))
-
-;Button that displays info
-(define info-button
-  (new button%
-       (label "Info")
-       (parent lower-panel)
-       (horiz-margin 8)
-       (callback (lambda (button event)
-                   (send info-frame show #t)))
-       ))
-
-(define info-message
-  (new message%
-       (label "LockNut: personal file encryption program\n\n Protect personal files with a powerful Vigenere \n cipher using password verification.\n\n  Austin Voecks, Summer 2014\n")
-       (font my-font)
-       (parent info-frame)
-       ))
-
-(define readme-button
-  (new button%
-       (label "View readme")
-       (parent info-frame)
-       (horiz-margin 35)
-       (callback (lambda (b e)
-                   (system "notepad.exe LockNutReadme.txt")))
-       ))
-
-(send main-frame create-status-line)
-(send main-frame show #t)
 
 
 

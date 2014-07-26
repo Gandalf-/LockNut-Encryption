@@ -2,6 +2,7 @@
 
 (require racket/port)
 (require racket/gui)
+(require "Encrypt.rkt")
 
 ;Prints x to a file
 (define (print-this x name)
@@ -20,11 +21,15 @@
                  (lambda (exn) "Oops")))
   (/ 1 0))
 
-(string (integer->char 55000))
+;(string (integer->char 55000))
+
+(define x 51)
+
+(procedure? run-encrypt-decrypt)
 
 
 
 
 
 
-      
+
