@@ -194,7 +194,8 @@
       "File name must not be blank"
       
       ;Check if file name already exists
-      (if (file-exists? (string-append given-file-name ".txt"))
+      (if (or (file-exists? (string-append given-file-name ".txt"))
+              (file-exists? (string-append given-file-name ".locknut")))
           "File of that name already exists"
           
           (let ((full-file-name (string-append given-file-name ".txt")))

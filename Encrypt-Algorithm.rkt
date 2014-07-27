@@ -49,6 +49,19 @@
                                          (car pass-list)))))
           ))))
 
+;Determine the starting position in the default key from the given password
+; Add all integer values of chars in password-key-list and modulo by the length
+; of the default key
+(define (password->starting-position password)
+  (let loop ((pass-list (password->key-list password))
+             (output 0))
+    (if (empty? pass-list)
+        (modulo output 100)
+        (loop (cdr pass-list) (+ output (car pass-list))))))
+
+
+
+;Checks for blank password, then generates the Viegenere cipher key-list and solver-list
 (define (generate-key-and-solver password password-is-key?-value)
   
   ;If password is blank, set it to default-password
@@ -103,7 +116,10 @@
   ;Run algorithm
   (let loop ((output-list '() )
              (remaining-input input-list)
-             (current-key-list key-list)
+             ;Choose the starting position of the input-key with password->starting position
+             (current-key-list (list-tail key-list
+                                          (password->starting-position password)
+                                          ))
              )
     
     (if (empty? remaining-input)

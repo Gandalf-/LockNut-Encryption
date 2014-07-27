@@ -137,6 +137,7 @@
                                         password
                                         pass-key?
                                         ))
+                     (send main-frame set-status-text "File created and encrypted!")
                      )
                    ;Hide create-file window
                    (send create-file-frame show #f)
