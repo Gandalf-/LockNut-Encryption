@@ -2,9 +2,13 @@ TODO:
 ==================
 
 Finish the ReadMe  
+
 Make .locknut RO  
+
 Make tmp.txt RO  
+
 Add option to make Glance's editable  
+
 LockNut init-file: Generate personal 100 char base key instead of the hardcoded one!  
 
 
@@ -12,7 +16,9 @@ LockNut-Encryption:
 =====================
 
 Overview  
+
 Features  
+
 Encryption Technique  
 
 
