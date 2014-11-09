@@ -45,13 +45,17 @@ Encryption Technique:
 
 LockNut uses a complex Vigenere Cipher style encryption technique to encrypt files. A typical Vigenere Cipher uses a key to shift each "place'th" letter by "place" amount. Given A = 1, B = 2, etc. A Vigenere Cipher with key "ABC", and message "Hello there".
 
-Unecrypted: 	Hello there  
-		ABCABCABCAB  
+Unecrypted: 	
+
+Hello there  
+ABCABCABCAB  
 
 	H	e	l	l	o	_	...
 	+1	+2	+3	+1	+2	+3	...
 
-Encrypted: 	IfOmd UjGSu	
+Encrypted:
+
+IfOmd UjGSu	
 
 Though it may appear strong, Vigenere Ciphers are still weak to letter frequency analysis. This comes the fact that the shift amounts can only be +1 to +26, for each letter in the alphabet and that keys are typically fairly short.
 
