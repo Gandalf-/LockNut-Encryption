@@ -27,9 +27,15 @@
 
 ;Gets the personal key from file
 (define (get-personal-key)
-  (let ((out (file->listChars "LockNut/PersonalKey.locknut")))
-    (display out)
-    out))
+  (let loop ((in (string-split (file->listChars "Data/PersonalKey.locknut")))
+             (out '() ))
+    (if (empty? in)
+        out
+        
+        (loop (cdr in)
+              (flatten (cons out (string->number (car in))))
+              ))
+    ))
 
 ;Creates the inverse of the key-list for solving
 (define (create-solver key-list)
@@ -78,31 +84,31 @@
 (define (generate-key-and-solver password password-is-key?-value shareable?)
   
   (let ((base-key '()))
-    (if (equal? #f shareable?)
+    (if (equal? #t shareable?)
         ;Use the default, shareable
         (set! base-key default-key)
         ;Use personal key, non-shareable
         (set! base-key (get-personal-key)))
-  
-  ;If password is blank, set it to default-password
-  (when (equal? password "")
-    (set! password default-password))
-  
-  ;Check if password is being used as the cipher key
-  (if password-is-key?-value
-      ;Use password as key
-      (begin
-        (set! key-list (password->key-list password))
-        (set! solver-list (create-solver key-list)))
-      ;Use default key, which includes the password
-      (begin
-        ;Modify the key-list with the password
-        (set! key-list (alter-key-list base-key (password->key-list password)))
-        (set! solver-list (create-solver key-list)))
-      )
-  ;Return password in case it's been set to the default value
-  password
-  ))
+    
+    ;If password is blank, set it to default-password
+    (when (equal? password "")
+      (set! password default-password))
+    
+    ;Check if password is being used as the cipher key
+    (if password-is-key?-value
+        ;Use password as key
+        (begin
+          (set! key-list (password->key-list password))
+          (set! solver-list (create-solver key-list)))
+        ;Use default key, which includes the password
+        (begin
+          ;Modify the key-list with the password
+          (set! key-list (alter-key-list base-key (password->key-list password)))
+          (set! solver-list (create-solver key-list)))
+        )
+    ;Return password in case it's been set to the default value
+    password
+    ))
 
 
 ;DEFINITIONS
