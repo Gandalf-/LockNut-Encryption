@@ -222,6 +222,7 @@
                          (password (send create-file-passcode-field get-value))
                          (pass-key? (send password-is-key-checkbox get-value))
                          (shareable? (send shareable-file-checkbox get-value)))
+                     
                      ;Run encrypt/decrypt, update status text
                      (send create-file-frame set-status-text 
                            (create-file file-name
@@ -370,11 +371,16 @@
        ))
 
 (define (generate-personal-key)
-  (let loop ((out '() ))
-            
+  (let loop ((out "" )
+             (i 0))
+    (if (= i 100)
+        out
+        (loop (string-append out (number->string (random 100)) " ")
+              (+ i 1)))
+    ))
 
 (define (startup)
-  (if (file-exists? "LockNut/PersonalKey.locknut")
+  (if (file-exists? "Data/PersonalKey.locknut")
       ;Already ran init sequence
       (begin
         (send main-frame create-status-line)
@@ -385,8 +391,11 @@
         (send init-frame create-status-line)
         (send init-frame show #t)
         (send init-frame set-status-text "Running first-time initialization sequence...")
-        (make-directory "LockNut Data")
-        ))
+        (make-directory "Data")
+        (print-this (generate-personal-key) "Data/PersonalKey.locknut")
+        (sleep 1)
+        (send init-frame set-status-text "Personal encryption key generated. Ready.")
+        )))
 
 (startup)
 

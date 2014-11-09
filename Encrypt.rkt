@@ -15,6 +15,7 @@
 (provide run-encrypt-decrypt)
 (provide glance)
 (provide create-file)
+(provide print-this)
 
 
 ;FILE IO
