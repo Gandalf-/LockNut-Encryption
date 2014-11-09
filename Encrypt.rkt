@@ -39,7 +39,8 @@
   (let (;Get list of chars from source file
         (chars-list (string->list (file->listChars input-file-name)))
         ;Remove .txt and add .locknut extension
-        (new-file-name (string-append (substring input-file-name 0 (- (string-length input-file-name) 4)) ".locknut")))
+        (new-file-name (string-append (substring input-file-name 0 (- (string-length input-file-name) 4))
+                                      ".locknut")))
     
     ;Add the password, with the special verification character at the end, onto the beginning of the chars-list
     (set! chars-list (append (string->list (string-append password
@@ -118,10 +119,10 @@
 ; choose a file, detect where to encrypt or decrypt,
 ; pass user options along to encrypt()
 ;---------------------------------------------
-(define (run-encrypt-decrypt password password-is-key?-value)
+(define (run-encrypt-decrypt password password-is-key?-value shareable?)
   
   ;Check for blank password, then generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver password password-is-key?-value))
+  (set! password (generate-key-and-solver password password-is-key?-value shareable?))
   
   ;Get file choice
   (let ((chosen-file (get-file)))
@@ -141,10 +142,13 @@
                   ;Invalid password, nothing done
                   "Invalid password")
               
-              ;Run encryption
-              (begin
-                (encrypt-file chosen-file password)
-                "Finished encrypting!"))
+              ;Check if .txt && run encryption
+              (if (equal? ".txt" (substring chosen-file (- (string-length chosen-file) 4)))
+                  (begin
+                    (encrypt-file chosen-file password)
+                    "Finished encrypting!")
+                  
+                  "Only .txt files may be encrypted"))
           ))
     ))
 
@@ -153,10 +157,10 @@
 ; Decrypts a file using the optional password,
 ; but just opens it in notepad. Decrypted file isn't saved
 ;---------------------------------------------
-(define (glance password password-is-key?-value)
+(define (glance password password-is-key?-value shareable?)
   
   ;Check for blank password, then generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver password password-is-key?-value))
+  (set! password (generate-key-and-solver password password-is-key?-value shareable?))
   
   ;Get file choice
   (let ((chosen-file (get-file)))
@@ -187,7 +191,7 @@
 
 ;CREATE NEW ENCRYPTED FILE
 ;-----------------------------------------------
-(define (create-file given-file-name password password-is-key?-value)
+(define (create-file given-file-name password password-is-key?-value shareable?)
   ;Check if file name is not blank
   (if (equal? given-file-name "")
       ;Invalid file name
@@ -200,7 +204,7 @@
           
           (let ((full-file-name (string-append given-file-name ".txt")))
             ;Check for blank password, then generate the cipher key-list and solver-list
-            (set! password (generate-key-and-solver password password-is-key?-value))
+            (set! password (generate-key-and-solver password password-is-key?-value shareable?))
             
             ;Create file
             (print-this "" full-file-name)

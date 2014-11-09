@@ -8,6 +8,8 @@
 ; default password, and all functions that deal with them
 ;---------------------------------------------------------------------
 
+(require racket/port)
+
 ;Provisions for Encrypt.rkt
 (provide encrypt)
 (provide generate-key-and-solver)
@@ -16,8 +18,18 @@
 (provide solver-list)
 (provide verification-char)
 
+;Moves the file into a string
+(define (file->listChars filename)
+  (port->string (open-input-file filename)))
+
 ;ENCRYPTION SETUP
 ;----------------------------------------------------------------------
+
+;Gets the personal key from file
+(define (get-personal-key)
+  (let ((out (file->listChars "LockNut/PersonalKey.locknut")))
+    (display out)
+    out))
 
 ;Creates the inverse of the key-list for solving
 (define (create-solver key-list)
@@ -43,6 +55,7 @@
         (begin
           (when (empty? pass-list)
             (set! pass-list pass-input-list))
+          
           (loop (cdr default-list)
                 (cdr pass-list) 
                 (flatten (cons output (+ (car default-list)
@@ -62,7 +75,14 @@
 
 
 ;Checks for blank password, then generates the Viegenere cipher key-list and solver-list
-(define (generate-key-and-solver password password-is-key?-value)
+(define (generate-key-and-solver password password-is-key?-value shareable?)
+  
+  (let ((base-key '()))
+    (if (equal? #f shareable?)
+        ;Use the default, shareable
+        (set! base-key default-key)
+        ;Use personal key, non-shareable
+        (set! base-key (get-personal-key)))
   
   ;If password is blank, set it to default-password
   (when (equal? password "")
@@ -77,12 +97,12 @@
       ;Use default key, which includes the password
       (begin
         ;Modify the key-list with the password
-        (set! key-list (alter-key-list default-key (password->key-list password)))
+        (set! key-list (alter-key-list base-key (password->key-list password)))
         (set! solver-list (create-solver key-list)))
       )
   ;Return password in case it's been set to the default value
   password
-  )
+  ))
 
 
 ;DEFINITIONS
