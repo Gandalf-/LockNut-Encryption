@@ -29,10 +29,9 @@ The Glance button allows you to look at the decrypted contents of an encrypted .
 Encryption Technique:
 =====================
 
-LockNut uses a complex Vigenere Cipher style encryption technique to encrypt files. A typical Vigenere Cipher uses a key to shift each "place'th" letter by "place" amount. Given A = 1, B = 2, etc. A Vigenere Cipher with key "ABC", and message "Hello there".
+LockNut uses a complex Vigenere Cipher style encryption technique to encrypt files. A typical Vigenere Cipher uses a key to shift each "place'th" letter by "place" amount. Given A = 1, B = 2, etc. A Vigenere Cipher with key "ABC", and message "Hello there" would do the following:
 
 Unecrypted: 	
-
 Hello there  
 ABCABCABCAB  
 
@@ -40,13 +39,20 @@ ABCABCABCAB
 	+1	+2	+3	+1	+2	+3	...
 
 Encrypted:
-
 IfOmd UjGSu	
 
-Though it may appear strong, Vigenere Ciphers are still weak to letter frequency analysis. This comes the fact that the shift amounts can only be +1 to +26, for each letter in the alphabet and that keys are typically fairly short.
+Though it may appear strong, Vigenere Ciphers are still vulnerable to letter frequency analysis. This comes the fact that the shift amounts can only be from +1 to +26, for each letter in the alphabet; and that keys are typically fairly short.
 
 LockNut accounts for both of these pitfalls. To start, LockNut shifts both up and down the full 16 bit ASCII table, allowing for 64,000+ potential shift amounts. Additionally, the input password is uniquely expanded to 100 characters; significantly stronger than even the most robust personal passwords. Additionally, unlike the Vigenere Cipher, which always shifts the 1st character in the message by the 1st character in the key, and so on, LockNut uses the input password again to determine a unique starting position anywhere in the expanded key.
 
-This second feature is used to foil brute-force attacks run through a third party program, and not LockNut itself. Given an encryption that only uses 9 bits of the ASCII table (eg. approximately 512 characters, a typical range of output characters for English text run through LockNut). There are 512^100 possible keys, and 100 starting positions for each key. A brute force attack would have to deal with 100 * 512^100 possible encryption schemes.
+This second feature is used to foil brute-force attacks run through a third party program, and not LockNut itself. Given an encryption that only uses 9 bits of the ASCII table (eg. approximately 512 characters, a typical range of output characters for English text run through LockNut). Taking into account the typical range of characters in English text and passwords, and the encryption key expansion, the possible range of characters in encrypted text is approximately 195. Given that the key is 100 characters long, there are 195^100 possible encryption keys.
 
- 
+Base Key		0-100
+Typical Password	32-126
+Starting positions	100
+
+Full Range		32-226 = 194
+
+100(194^100) = 1.008001e+231
+
+
