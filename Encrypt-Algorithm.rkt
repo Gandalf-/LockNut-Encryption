@@ -13,10 +13,10 @@
 ;Provisions for Encrypt.rkt
 (provide encrypt)
 (provide generate-key-and-solver)
+(provide default-password)
 
 (provide key-list)
 (provide solver-list)
-(provide verification-char)
 
 ;Encryption key length
 (define key-length 100)
@@ -106,10 +106,6 @@
         ;Use personal key, non-shareable
         (set! base-key (get-personal-key)))
     
-    ;If password is blank, set it to default-password
-    (when (string=? password "")
-      (set! password default-password))
-    
     ;Check if password is being used as the cipher key
     (if password-is-key?-value
         ;Use password as key
@@ -138,17 +134,11 @@
 
 ;Default key, 100 random integers [0-100]
 (define default-key (append A B C D))
-(define default-password "QUz7x5SW3dvpuIhCRjXgNXdFJU8a")
-
-;Verification character is tacked onto the end of the password given during encryption.
-; It's used to make sure the an incorrect password is allowed to decrypt because its a
-; substring of the correct password.
-(define verification-char "훘")
+(define default-password "6AQO*fvr*RQ7Uv!mCnPc8vxKdia45a$uh'7B5K06Rcj863RMyg")
 
 ;Both uniquely assigned during encrypt/decrypt
 (define key-list '() )
 (define solver-list '() )
-
 
 
 ;ENCRYPTION ALGORITHM
@@ -176,8 +166,8 @@
           (let ((shifted-integer (+ (car current-key-list) 
                                     (char->integer (car remaining-input)))))
             
-            ;Incorrect password results in negative shift amount check
-            ; Default to 0, the result will be incorrect anyway
+            ;Incorrect password results in negative shift amount
+            ; default to 0 shift, the result will be still be incorrect
             (when (> 0 shifted-integer)
               (set! shifted-integer 0))
             
