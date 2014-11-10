@@ -66,6 +66,7 @@
                    (if (equal? help-mode #f)
                        (begin
                          ;Run encrypt/decrypt, update status text
+                         (send main-frame set-status-text "Working...")
                          (send main-frame set-status-text 
                                (run-encrypt-decrypt (send passcode-field get-value)
                                                     (send password-is-key-checkbox get-value)
@@ -93,6 +94,7 @@
                    (if (equal? help-mode #f)
                        (begin
                          ;Run glance, update status text
+                         (send main-frame set-status-text "Working...")
                          (send main-frame set-status-text
                                (glance (send passcode-field get-value)
                                        (send password-is-key-checkbox get-value)
@@ -223,6 +225,7 @@
                          (shareable? (send shareable-file-checkbox get-value)))
                      
                      ;Run encrypt/decrypt, update status text
+                     (send main-frame set-status-text "Working...")
                      (send create-file-frame set-status-text 
                            (create-file file-name
                                         password
@@ -375,11 +378,11 @@
                    (send init-frame show #f)))
        ))
 
-;Creates a string of 100 random integers [0-100]
+;Creates a string of 250 random integers [0-200]
 (define (generate-personal-key)
   (let loop ((out "" )
              (i 0))
-    (if (= i 100)
+    (if (= i 250)
         out
         (loop (string-append out (number->string (random 100)) " ")
               (+ i 1)))
@@ -402,7 +405,7 @@
         (unless (directory-exists? "Data")
           (make-directory "Data"))
         (print-this (generate-personal-key) "Data/PersonalKey.locknut")
-        (sleep 2)
+        (sleep 1.5)
         (send init-frame set-status-text "Personal encryption key generated. Ready.")
         )))
 

@@ -13,13 +13,12 @@
 ;Provisions for Encrypt.rkt
 (provide encrypt)
 (provide generate-key-and-solver)
-
+(provide default-password)
 (provide key-list)
 (provide solver-list)
-(provide verification-char)
 
 ;Encryption key length
-(define key-length 100)
+(define key-length 250)
 
 ;Moves the file into a string
 (define (file->listChars filename)
@@ -87,7 +86,7 @@
   (let loop ((pass-list (password->key-list password))
              (output 0))
     (if (empty? pass-list)
-        (modulo output 100)
+        (modulo output key-length)
         (loop (cdr pass-list)
               (+ output (car pass-list))))
     ))
@@ -105,10 +104,6 @@
         (set! base-key default-key)
         ;Use personal key, non-shareable
         (set! base-key (get-personal-key)))
-    
-    ;If password is blank, set it to default-password
-    (when (string=? password "")
-      (set! password default-password))
     
     ;Check if password is being used as the cipher key
     (if password-is-key?-value
@@ -131,24 +126,19 @@
 ;----------------------------------------------------------------------
 
 ;Define default-key, key-list and solver-list
-(define A '(28 72 99 85 89 21 40 86 42 26 23 14 50 6 28 51 79 7 34 90 63 90 37 81 18))
-(define B '(97 40 51 70 55 53 97 64 12 96 19 71 16 7 9 60 26 5 46 13 96 60 89 85 81))
-(define C '(84 10 89 95 91 90 83 69 57 33 72 29 46 10 77 49 89 82 41 0 5 96 20 69 99))
-(define D '(61 23 76 35 86 47 3 91 6 79 39 56 31 77 54 96 90 20 81 67 31 65 65 56 61))
+(define A '(82 85 71 2 12 37 88 56 29 79 30 27 82 2 91 67 86 94 72 45 96 92 53 84 1 54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
+(define B '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38 18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
+(define C '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18 98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
+(define D '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91 84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
+(define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62 76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
 
-;Default key, 100 random integers [0-100]
-(define default-key (append A B C D))
-(define default-password "QUz7x5SW3dvpuIhCRjXgNXdFJU8a")
-
-;Verification character is tacked onto the end of the password given during encryption.
-; It's used to make sure the an incorrect password is allowed to decrypt because its a
-; substring of the correct password.
-(define verification-char "훘")
+;Default key, 250 (* 50 5), random integers [0-100]
+(define default-key (append A B C D E))
+(define default-password "6AQO*fvr*RQ7Uv!mCnPc8vxKdia45a$uh'7B5K06Rcj863RMyg")
 
 ;Both uniquely assigned during encrypt/decrypt
 (define key-list '() )
 (define solver-list '() )
-
 
 
 ;ENCRYPTION ALGORITHM
@@ -175,12 +165,12 @@
           ; to the current input-list value
           (let ((shifted-integer (+ (car current-key-list) 
                                     (char->integer (car remaining-input)))))
-            
-            ;Incorrect password results in negative shift amount check
-            ; Default to 0, the result will be incorrect anyway
+                       
+            ;Incorrect password results in negative shift amount
+            ; default to 0 shift, the result will be still be incorrect
             (when (> 0 shifted-integer)
               (set! shifted-integer 0))
-            
+
             ;Continue loop with new encrypted character added to the output list
             (loop (flatten (cons output-list
                                  (integer->char shifted-integer)))
