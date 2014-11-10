@@ -247,7 +247,7 @@
                                                     shareable?))
             
             ;Create file
-            (init-file full-file-name)
+            ;(init-file full-file-name)
             (print-this " " full-file-name)
             
             ;Open file
