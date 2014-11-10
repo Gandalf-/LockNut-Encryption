@@ -18,6 +18,9 @@
 (provide solver-list)
 (provide verification-char)
 
+;Encryption key length
+(define key-length 100)
+
 ;Moves the file into a string
 (define (file->listChars filename)
   (port->string (open-input-file filename)))
@@ -31,34 +34,42 @@
              (out '() ))
     (if (empty? in)
         out
-        
         (loop (cdr in)
               (flatten (cons out (string->number (car in))))
               ))
     ))
 
+;Take the inverse of the encryption key to make the decryption key
 ;Creates the inverse of the key-list for solving
 (define (create-solver key-list)
-  (let loop ((input key-list) (output '()))
+  (let loop ((input key-list)
+             (output '()))
     (if (empty? input)
         output
-        (loop (cdr input) (flatten (cons output (* -1 (car input)))))
+        (loop (cdr input)
+              (flatten (cons output (* -1 (car input)))))
         )))
 
+;Make encryption key
 ;Generate a key-list (list of integers indicating shift amounts) from the given password
 (define (password->key-list password)
-  (let loop ((input (string->list password)) (output '() ))
+  (let loop ((input (string->list password))
+             (output '() ))
     (if (empty? input)
         output
-        (loop (cdr input) (flatten (cons output (char->integer (car input)))))
+        (loop (cdr input)
+              (flatten (cons output (char->integer (car input)))))
         )))
 
 ;Add the password-key-list to the default key-list, to make it unique to the given password
 (define (alter-key-list default-key-list pass-input-list)
-  (let loop ((default-list default-key-list) (pass-list pass-input-list) (output '()))
+  (let loop ((default-list default-key-list)
+             (pass-list pass-input-list)
+             (output '() ))
     (if (empty? default-list)
         output
         (begin
+          ;Reset the pass-list
           (when (empty? pass-list)
             (set! pass-list pass-input-list))
           
@@ -66,7 +77,8 @@
                 (cdr pass-list) 
                 (flatten (cons output (+ (car default-list)
                                          (car pass-list)))))
-          ))))
+          ))
+    ))
 
 ;Determine the starting position in the default key from the given password
 ; Add all integer values of chars in password-key-list and modulo by the length
@@ -76,13 +88,17 @@
              (output 0))
     (if (empty? pass-list)
         (modulo output 100)
-        (loop (cdr pass-list) (+ output (car pass-list))))))
+        (loop (cdr pass-list)
+              (+ output (car pass-list))))
+    ))
 
 
-
-;Checks for blank password, then generates the Viegenere cipher key-list and solver-list
+;Checks for blank password, then generates the both the encryption and decryption
+; keys. These aren't passed out. They're values are set to key-list and solver-list,
+; predefined variables
 (define (generate-key-and-solver password password-is-key?-value shareable?)
   
+  ;Determine which base-key to use. Default for shareable, Personal for not shareable
   (let ((base-key '()))
     (if (equal? #t shareable?)
         ;Use the default, shareable
@@ -91,7 +107,7 @@
         (set! base-key (get-personal-key)))
     
     ;If password is blank, set it to default-password
-    (when (equal? password "")
+    (when (string=? password "")
       (set! password default-password))
     
     ;Check if password is being used as the cipher key
@@ -120,6 +136,7 @@
 (define C '(84 10 89 95 91 90 83 69 57 33 72 29 46 10 77 49 89 82 41 0 5 96 20 69 99))
 (define D '(61 23 76 35 86 47 3 91 6 79 39 56 31 77 54 96 90 20 81 67 31 65 65 56 61))
 
+;Default key, 100 random integers [0-100]
 (define default-key (append A B C D))
 (define default-password "QUz7x5SW3dvpuIhCRjXgNXdFJU8a")
 
@@ -145,9 +162,7 @@
              ;Choose the starting position of the input-key with password->starting position
              (current-key-list (list-tail key-list
                                           (password->starting-position password)
-                                          ))
-             )
-    
+                                          )))
     (if (empty? remaining-input)
         output-list
         
@@ -171,5 +186,6 @@
                                  (integer->char shifted-integer)))
                   (cdr remaining-input)
                   (cdr current-key-list)
-                  )))
-        )))
+                  ))
+          ))
+    ))

@@ -141,7 +141,7 @@
                   "Finished decrypting!"
                   
                   ;Invalid password, nothing done
-                  "Invalid password")
+                  "Invalid password or incorrect base-key")
               
               ;Check if .txt && run encryption
               (if (equal? ".txt" (substring chosen-file (- (string-length chosen-file) 4)))

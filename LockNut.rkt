@@ -280,14 +280,18 @@
 ;Shareable files use the standard base key instead of personal key
 (define shareable-file-checkbox
   (new check-box%
-       (label "Use shareable file base encryption key")
+       (label "Encrypt/Decrypt with standard key. Shareable mode.")
        (parent options-panel)
        (callback (lambda (b e)
                    (if (send shareable-file-checkbox get-value)
                        ;Shareable file
-                       (send options-frame set-status-text "Files en/decrypt with standard base key, can be decrypted elsewhere")
+                       (begin
+                         (send options-frame set-status-text "Encrypt/decrypt with standard base-key.")
+                         (send main-frame set-status-text "Standard base-key loaded. Ready."))
                        ;Not Shareable
-                       (send options-frame set-status-text "Files en/decrypt using the personal key on this system."))))
+                       (begin
+                         (send options-frame set-status-text "Encrypt/decrypt with the personal base-key on this system.")
+                         (send main-frame set-status-text "Personal base-key loaded. Ready.")))))
        ))
 
 ;Close the window
@@ -324,7 +328,7 @@
        (parent info-frame)
        (horiz-margin 35)
        (callback (lambda (b e)
-                   (system "notepad.exe README.txt")))
+                   (system "notepad.exe README.md")))
        ))
 
 (define info-close
@@ -351,6 +355,7 @@
 (define init-background-image (new message% [parent init-frame] 
                                    (label (make-object bitmap% "Support/Nut.jpg"))))
 
+;Open the readme in notepad
 (define init-readme-button
   (new button%
        (label "View readme")
@@ -367,9 +372,11 @@
        (parent init-frame)
        (callback (lambda (b e)
                    (send main-frame show #t)
+                   (send main-frame create-status-line)
                    (send init-frame show #f)))
        ))
 
+;Creates a string of 100 random integers [0-100]
 (define (generate-personal-key)
   (let loop ((out "" )
              (i 0))
@@ -379,6 +386,8 @@
               (+ i 1)))
     ))
 
+;Startup sequence. Check for PersonalKey file, otherwise
+; run first time setup: Generate personal key, offer readme
 (define (startup)
   (if (file-exists? "Data/PersonalKey.locknut")
       ;Already ran init sequence
@@ -391,9 +400,10 @@
         (send init-frame create-status-line)
         (send init-frame show #t)
         (send init-frame set-status-text "Running first-time initialization sequence...")
-        (make-directory "Data")
+        (unless (directory-exists? "Data")
+          (make-directory "Data"))
         (print-this (generate-personal-key) "Data/PersonalKey.locknut")
-        (sleep 1)
+        (sleep 2)
         (send init-frame set-status-text "Personal encryption key generated. Ready.")
         )))
 
