@@ -31,25 +31,24 @@
 
 ;Background, custom nut image
 (define background-image (new message% [parent main-frame] 
-                              (label (make-object bitmap% "Support/Nut.jpg"))))
+                              (label (make-object bitmap% "Support/Nut2.jpg"))))
 
 ;Panel for file encryption or decryption, glance, and passcode-field
 (define panel (instantiate horizontal-panel% (main-frame)
                 (stretchable-height #f)
                 ))
 
-;Panel for options
+;Panel for create file and options buttons
 (define create-options-panel (instantiate horizontal-panel% (main-frame)
                                (stretchable-height #f)
                                ))
 
+;Panel for information and help buttons
 (define info-help-panel (instantiate horizontal-panel% (main-frame)
                           (stretchable-height #f)
                           ))
 
 ;Gets optional password from user
-; Default is to generate a seed that alters the encryption algorithm's output
-; Option in option-panel to use password as the encryption key
 (define passcode-field
   (new text-field%
        (label "Password")
@@ -82,7 +81,6 @@
                          (send main-frame set-status-text " ")
                          (set! help-mode #f)))
                    ))
-       
        ))
 
 ;Button for glance procedure
@@ -101,6 +99,7 @@
                                        (send shareable-file-checkbox get-value)))
                          ;Push password changes into other passcode fields
                          (send create-file-passcode-field set-value (send passcode-field get-value)))
+                       
                        ;Help mode
                        (begin
                          (set! help-mode #f)
