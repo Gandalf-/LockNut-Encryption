@@ -47,9 +47,9 @@ LockNut accounts for both of these pitfalls. To start, LockNut shifts both up an
 
 This second feature is used to foil brute-force attacks run through a third party program, and not LockNut itself. Given an encryption that only uses 9 bits of the ASCII table (eg. approximately 512 characters, a typical range of output characters for English text run through LockNut). Taking into account the typical range of characters in English text and passwords, and the encryption key expansion, the possible range of characters in encrypted text is approximately 195. Given that the key is 100 characters long, there are 195^100 possible encryption keys.
 
-Base Key		0-100
-Typical Password	32-126
-Starting positions	100
+Base Key		0-100  	
+Typical Password	32-126   
+Starting positions	100   
 
 Full Range		32-226 = 194
 
