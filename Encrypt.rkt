@@ -259,6 +259,36 @@
             ))
       ))
 
+;EDITOR WINDOW
+;-----------------------------------------------
+(define editor-frame
+  (new frame%
+       (label "LockNut Editor")
+       (width 800)
+       (height 600)))
 
+(define editor-canvas
+  (new editor-canvas%
+       (parent editor-frame)))
+
+(define save-button
+  (new button%
+       (label "Done")
+       (parent editor-frame)
+       (callback (lambda (b e)
+                   (send text-field save-file "Out.txt" 'text)
+                   (send editor-frame show #f)))))
+
+(define text-field
+  (new text%))
+
+(define mb (new menu-bar% [parent editor-frame]))
+(define m-edit (new menu% [label "Edit"] [parent mb]))
+(define m-font (new menu% [label "Font"] [parent mb]))
+(append-editor-operation-menu-items m-edit #f)
+(append-editor-font-menu-items m-font)
+
+
+(send editor-canvas set-editor text-field)
 
 
