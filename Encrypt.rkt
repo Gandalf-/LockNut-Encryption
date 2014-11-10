@@ -27,6 +27,14 @@
 
 ;Prints x to a file
 (define (print-this x name)
+  
+  (when (file-exists? name)
+    (delete-file name))
+  
+  ;Copy UTF8
+  (copy-file "Support/UTF8.txt" name #f)
+  
+  ;Fill "name"
   (call-with-output-file* name #:exists 'replace
                           (lambda (output-port)
                             (display x output-port))))
