@@ -170,12 +170,7 @@
             ; default to 0 shift, the result will be still be incorrect
             (when (> 0 shifted-integer)
               (set! shifted-integer 0))
-            
-            ;Fix quote error
-            (when (equal? #\� (integer->char shifted-integer))
-              (display shifted-integer)(display " ")
-              (set! shifted-integer 39))
-            
+
             ;Continue loop with new encrypted character added to the output list
             (loop (flatten (cons output-list
                                  (integer->char shifted-integer)))

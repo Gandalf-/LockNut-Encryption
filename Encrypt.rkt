@@ -25,16 +25,15 @@
 (define (file->listChars filename)
   (port->string (open-input-file filename)))
 
-;Prints x to a file
-(define (print-this x name)
-  
+;Creates a UTF8 .txt file
+(define (init-file name)
   (when (file-exists? name)
     (delete-file name))
-  
   ;Copy UTF8
-  (copy-file "Support/UTF8.txt" name #f)
-  
-  ;Fill "name"
+  (copy-file "Support/UTF8.txt" name #f))
+
+;Prints x to a file
+(define (print-this x name)
   (call-with-output-file* name #:exists 'replace
                           (lambda (output-port)
                             (display x output-port))))
@@ -248,9 +247,12 @@
                                                     shareable?))
             
             ;Create file
-            (print-this "" full-file-name)
+            (init-file full-file-name)
+            (print-this " " full-file-name)
+            
             ;Open file
             (system (string-append "notepad.exe " full-file-name))
+            
             ;Encrypt file
             (encrypt-file full-file-name password)
             "Finished encrypting!"
