@@ -109,7 +109,7 @@
     (let ((decrypted-file (list->string (encrypt chars-list
                                                  solver-list
                                                  password)) ))
-            
+      
       ;Check whether to glance or save decrypt file
       (if (equal? #t glance?)
           
@@ -232,70 +232,16 @@
 ;CALLS ENCRYPT
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
-  ;Check if file name is not blank
-  (if (equal? given-file-name "")
-      ;Invalid file name
-      "File name must not be blank"
-      
-      ;Check if file name already exists
-      (if (or (file-exists? (string-append given-file-name ".txt"))
-              (file-exists? (string-append given-file-name ".locknut")))
-          "File of that name already exists"
-          
-          (let ((full-file-name (string-append given-file-name ".txt")))
-            (set! file-name full-file-name)
-            ;Buffer password and generate the cipher key-list and solver-list
-            (set! password (generate-key-and-solver (buff-password password)
-                                                    password-is-key?-value
-                                                    shareable?))
-            (set! curr-password password)
-            ;Create file
-            ;(init-file full-file-name)
-            ;(print-this " " full-file-name)
-            
-            ;Open file in the text editor
-            (send editor-frame show #t)
-            ;(system (string-append "notepad.exe " full-file-name))
-            
-            ;Encrypt file
-            ;(encrypt-file full-file-name password)
-            "Finished encrypting!"
-            ))
-      ))
+  
+  ;Buffer password and generate the cipher key-list and solver-list
+  (set! password (generate-key-and-solver (buff-password password)
+                                          password-is-key?-value
+                                          shareable?))
+  ;Encrypt file
+  (encrypt-file given-file-name password)
+  )
 
-;EDITOR WINDOW
-;-----------------------------------------------
-(define editor-frame
-  (new frame%
-       (label "LockNut Editor")
-       (width 800)
-       (height 600)))
 
-(define editor-canvas
-  (new editor-canvas%
-       (parent editor-frame)))
 
-(define save-button
-  (new button%
-       (label "Done")
-       (parent editor-frame)
-       (callback (lambda (b e)
-                   (send text-field save-file file-name 'text)
-                   (send editor-frame show #f)
-                   (encrypt-file file-name curr-password)
-                   ))
-       ))
-
-(define text-field
-  (new text%))
-
-(define mb (new menu-bar% [parent editor-frame]))
-(define m-edit (new menu% [label "Edit"] [parent mb]))
-(define m-font (new menu% [label "Font"] [parent mb]))
-
-(append-editor-operation-menu-items m-edit #f)
-(append-editor-font-menu-items m-font)
-
-(send editor-canvas set-editor text-field)
 
 

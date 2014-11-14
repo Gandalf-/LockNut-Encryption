@@ -186,8 +186,8 @@
 (define create-file-frame
   (new frame%
        (label "New Encrypted File")
-       (min-width 350)
-       (min-height 150)
+       (min-width 500)
+       (min-height 450)
        ))
 
 (send create-file-frame create-status-line)
@@ -213,40 +213,53 @@
        (font my-font)
        ))
 
+;Editor canvas
+(define editor-canvas
+  (new editor-canvas%
+       (parent create-file-frame)))
+
+;Text editor setup
+(define text-field (new text%))
+(send editor-canvas set-editor text-field)
+
 ;Generate new file button
 (define generate-file-button
   (new button%
-       (label "Create")
-       (parent create-file-panel)
+       (label "Create and Encrypt")
+       (parent create-file-frame)
        (callback (lambda (button event)
-                   (let ((file-name (send filename-field get-value))
+                   (let ((file-name (string-append (send filename-field get-value) ".txt"))
                          (password (send create-file-passcode-field get-value))
                          (pass-key? (send password-is-key-checkbox get-value))
                          (shareable? (send shareable-file-checkbox get-value)))
                      
-                     ;Run encrypt/decrypt, update status text
-                     (send main-frame set-status-text "Working...")
-                     (send create-file-frame set-status-text 
-                           (create-file file-name
-                                        password
-                                        pass-key?
-                                        shareable?
-                                        ))
-                     (send main-frame set-status-text "File created and encrypted!")
-                     )
-                   ;Hide create-file window
-                   (send create-file-frame show #f)
-                   ;Password changes onto other passcode fields
-                   (send passcode-field set-value (send create-file-passcode-field get-value))
-                   ))
-       ))
-
-;Message explaining details
-(define create-file-message
-  (new message%
-       (label "Filename: name of the new encrypted file \nPassword: optional password used during encryption \n Create : Creates, opens file. Make your edits\n and save, then close notepad. File is now encrypted.")
-       (font my-font)
-       (parent create-file-frame)
+                     ;Check for empty file name
+                     (if (string=? "" file-name)
+                         (send create-file-frame set-status-text "File name must not be blank")
+                         
+                         ;Check if file already exists
+                         (if (file-exists? file-name)
+                             (send create-file-frame set-status-text "File name already exists")
+                             
+                             (begin
+                               ;Create the file
+                               (send text-field save-file file-name 'text)
+                               
+                               ;Run encrypt/decrypt, update status text
+                               (send create-file-frame set-status-text "Working...")
+                               (create-file file-name
+                                            password
+                                            pass-key?
+                                            shareable?
+                                            )
+                               (send main-frame set-status-text "File created and encrypted")
+                               
+                               ;Hide create-file window
+                               (send create-file-frame show #f)
+                               ;Password changes onto other passcode fields
+                               (send passcode-field set-value (send create-file-passcode-field get-value))
+                               )))
+                     )))
        ))
 
 
