@@ -29,7 +29,7 @@
 ;(print-this "“Papa? What is it?” λ, α, γ ..." "ABC.txt")
 
 ;(file->listChars "ABC.txt")
-(list->string (read-this "Out.txt"))
+;(list->string (read-this "Out.txt"))
 
 
 (define f
@@ -62,6 +62,7 @@
 
 (send c set-editor t)
 (send f show #t)
+(send t load-file "Hebrew.txt")
 
 
 ;(send t save-file "Example.txt" 'text)

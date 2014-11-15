@@ -181,6 +181,7 @@
                    (send main-frame set-status-text "Click on a button for help")))
        ))
 
+
 ;CREATE FILE WINDOW
 ;----------------------------------------------------------------------
 (define create-file-frame
@@ -189,6 +190,12 @@
        (min-width 500)
        (min-height 450)
        ))
+
+(define mb (new menu-bar% [parent create-file-frame]))
+(define m-edit (new menu% [label "Edit"] [parent mb]))
+(define m-font (new menu% [label "Font"] [parent mb]))
+(append-editor-operation-menu-items m-edit #f)
+(append-editor-font-menu-items m-font)
 
 (send create-file-frame create-status-line)
 
@@ -260,6 +267,15 @@
                                (send passcode-field set-value (send create-file-passcode-field get-value))
                                )))
                      )))
+       ))
+
+;Button that cancels the create-file sequence
+(define create-file-canel
+  (new button%
+       (label "Cancel")
+       (parent create-file-frame)
+       (callback (lambda (b e)
+                   (send create-file-frame show #f)))
        ))
 
 

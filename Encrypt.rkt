@@ -113,15 +113,19 @@
       ;Check whether to glance or save decrypt file
       (if (equal? #t glance?)
           
+          ;GLANCE
           ;Verify password against buffered password, and glance
           (if (equal? (substring decrypted-file 0 50)
                       password)
               
               ;Valid password, remove password from beginning and show in notepad
+              ;Valid password, show editor, load text
               (begin
                 (print-this (substring decrypted-file 50 (string-length decrypted-file))
                             "Glance.txt")
-                (system "notepad.exe Glance.txt")
+                (send editor-frame show #t)
+                (send text-editor load-file "Glance.txt")
+                ;(system "notepad.exe Glance.txt")
                 (delete-file "Glance.txt"))
               
               ;Invalid password
@@ -240,6 +244,40 @@
   ;Encrypt file
   (encrypt-file given-file-name password)
   )
+
+;NEW WINDOW EDITOR
+;----------------------------------------------
+(define editor-frame
+  (new frame%
+       (label "LockNut Editor")
+       (width 500)
+       (height 400)))
+
+(define editor-canvas
+  (new editor-canvas%
+       (parent editor-frame)))
+
+(define b
+  (new button%
+       (label "Done")
+       (parent editor-frame)
+       (callback (lambda (b e)
+                   ;(send t save-file file-name 'text)
+                   (send editor-frame show #f)))))
+
+(define text-editor
+  (new text%))
+
+(define mb (new menu-bar% [parent editor-frame]))
+(define m-edit (new menu% [label "Edit"] [parent mb]))
+(define m-font (new menu% [label "Font"] [parent mb]))
+(append-editor-operation-menu-items m-edit #f)
+(append-editor-font-menu-items m-font)
+
+
+(send editor-canvas set-editor text-editor)
+;(send editor-frame show #t)
+;(send t load-file "Hebrew.txt")
 
 
 
