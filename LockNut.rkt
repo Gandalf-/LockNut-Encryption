@@ -191,6 +191,11 @@
        (min-height 450)
        ))
 
+;Panel for create-file text fields
+(define create-file-panel-text (instantiate vertical-panel% (create-file-frame)
+                            (stretchable-height #f)
+                            ))
+
 (define mb (new menu-bar% [parent create-file-frame]))
 (define m-edit (new menu% [label "Edit"] [parent mb]))
 (define m-font (new menu% [label "Font"] [parent mb]))
@@ -199,16 +204,11 @@
 
 (send create-file-frame create-status-line)
 
-;Panel for create-file buttons
-(define create-file-panel (instantiate vertical-panel% (create-file-frame)
-                            (stretchable-height #f)
-                            ))
-
 ;Filename field
-(define filename-field
+(define create-file-filename-field
   (new text-field%
        (label "Filename")
-       (parent create-file-panel)
+       (parent create-file-panel-text)
        (font my-font)
        ))
 
@@ -216,7 +216,7 @@
 (define create-file-passcode-field
   (new text-field%
        (label "Password")
-       (parent create-file-panel)
+       (parent create-file-panel-text)
        (font my-font)
        ))
 
@@ -229,13 +229,18 @@
 (define text-field (new text%))
 (send editor-canvas set-editor text-field)
 
+;Panel for create-file buttons
+(define create-file-panel (instantiate horizontal-panel% (create-file-frame)
+                            (stretchable-height #f)
+                            ))
+
 ;Generate new file button
 (define generate-file-button
   (new button%
        (label "Create and Encrypt")
-       (parent create-file-frame)
+       (parent create-file-panel)
        (callback (lambda (button event)
-                   (let ((file-name (string-append (send filename-field get-value) ".txt"))
+                   (let ((file-name (string-append (send create-file-filename-field get-value) ".txt"))
                          (password (send create-file-passcode-field get-value))
                          (pass-key? (send password-is-key-checkbox get-value))
                          (shareable? (send shareable-file-checkbox get-value)))
@@ -269,11 +274,40 @@
                      )))
        ))
 
+;Load preexisting file into the editor
+(define create-file-load
+  (new button%
+       (label "Load file")
+       (parent create-file-panel)
+       (callback (lambda (b e)
+                   ;Get and verify file
+                   (let ((chosen-file (get-file)))
+                     (if (equal? chosen-file #f)
+                         (send create-file-frame set-status-text "No file chosen")
+                         
+                         (begin
+                           (set! chosen-file (path->string chosen-file))
+                           
+                           (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+                               (send create-file-frame set-status-text "Cannot load .locknut files")
+                               
+                               (begin
+                                 ;Load file
+                                 (send text-field load-file chosen-file)
+                                 ;Update fields
+                                 (send create-file-passcode-field set-value (send passcode-field get-value))
+                                 (send create-file-filename-field set-value chosen-file)
+                                 
+                                 (send create-file-frame set-status-text "File loaded"))
+                               )))
+                     )))
+       ))
+
 ;Button that cancels the create-file sequence
-(define create-file-canel
+(define create-file-cancel
   (new button%
        (label "Cancel")
-       (parent create-file-frame)
+       (parent create-file-panel)
        (callback (lambda (b e)
                    (send create-file-frame show #f)))
        ))

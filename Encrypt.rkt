@@ -57,7 +57,7 @@
 
 ;FILE ENCRYPTION
 ; CALLED BY CREATE-FILE, GLANCE, AND RUN-ENCRYPT-DECRYPT
-; Takes a file as input and prints the encrypted version of the file to a text file
+; Takes a file as input and prints the encrypted version of the file to a .locknut file
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
   
@@ -118,12 +118,14 @@
           (if (equal? (substring decrypted-file 0 50)
                       password)
               
-              ;Valid password, remove password from beginning and show in notepad
               ;Valid password, show editor, load text
               (begin
+                (set! curr-password password)
+                (set! file-name new-file-name)
                 (print-this (substring decrypted-file 50 (string-length decrypted-file))
                             "Glance.txt")
                 (send editor-frame show #t)
+                (send file-info set-label (string-append "Filename: " new-file-name))
                 (send text-editor load-file "Glance.txt")
                 ;(system "notepad.exe Glance.txt")
                 (delete-file "Glance.txt"))
@@ -215,7 +217,6 @@
         (begin
           (set! chosen-file (path->string chosen-file))
           
-          ;Decrypt .locknut files, open in notepad
           ;Check if file is .locknut extension
           (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
               (begin
@@ -245,6 +246,7 @@
   (encrypt-file given-file-name password)
   )
 
+
 ;NEW WINDOW EDITOR
 ;----------------------------------------------
 (define editor-frame
@@ -253,17 +255,23 @@
        (width 500)
        (height 400)))
 
+(send editor-frame create-status-line)
+
+;Panel for editor text fields
+(define editor-info-panel
+  (instantiate vertical-panel% (editor-frame)
+                            (stretchable-height #f)
+                            ))
+
+(define file-info
+  (new message%
+       (label "Filename: ")
+       (parent editor-info-panel)
+       ))
+
 (define editor-canvas
   (new editor-canvas%
        (parent editor-frame)))
-
-(define b
-  (new button%
-       (label "Done")
-       (parent editor-frame)
-       (callback (lambda (b e)
-                   ;(send t save-file file-name 'text)
-                   (send editor-frame show #f)))))
 
 (define text-editor
   (new text%))
@@ -276,8 +284,35 @@
 
 
 (send editor-canvas set-editor text-editor)
-;(send editor-frame show #t)
-;(send t load-file "Hebrew.txt")
+
+;Panel for editor buttons
+(define editor-button-panel
+  (instantiate horizontal-panel% (editor-frame)
+                              (stretchable-height #f)
+                              ))
+
+;Save and reencrypt the changes to the file
+(define editor-reencrypt
+  (new button%
+       (label "Encrypt changes")
+       (parent editor-button-panel)
+       (callback (lambda (b e)
+                   (send editor-frame set-status-line "NOT Encrypting...")
+                   ;(send text-editor save-file file-name 'text)
+                   ;(encrypt-file file-name curr-password)
+                   (send editor-frame set-status-line "Encryption finished")
+                   ))
+       ))
+
+(define editor-close
+  (new button%
+       (label "Close without saving")
+       (parent editor-button-panel)
+       (callback (lambda (b e)
+                   ;(send t save-file file-name 'text)
+                   (send editor-frame show #f)))))
+
+
 
 
 
