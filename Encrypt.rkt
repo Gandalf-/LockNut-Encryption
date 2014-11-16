@@ -177,7 +177,7 @@
 ;CALLS ENCRYPT
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
- 
+  
   ;Buffer password and generate the cipher key-list and solver-list
   (set! password (generate-key-and-solver (buff-password password)
                                           password-is-key?-value
@@ -274,6 +274,9 @@
        (callback (lambda (b e)
                    ;(send t save-file file-name 'text)
                    (send editor-frame show #f)))))
+
+
+
 
 
 

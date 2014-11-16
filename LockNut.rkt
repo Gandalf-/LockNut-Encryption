@@ -218,7 +218,7 @@
                          (pass-key? (send password-is-key-checkbox get-value))
                          (shareable? (send shareable-file-checkbox get-value)))
                      
-                    ;Check for empty file name
+                     ;Check for empty file name
                      (if (string=? "" file-name)
                          (send create-file-frame set-status-text "File name must not be blank")
                          
