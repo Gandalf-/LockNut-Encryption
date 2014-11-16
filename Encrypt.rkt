@@ -25,7 +25,10 @@
 
 ;Moves the file into a string
 (define (file->listChars filename)
-  (port->string (open-input-file filename)))
+  (letrec ((in (open-input-file filename))
+           (out (port->string in)))
+    (close-input-port in)
+    out))
 
 ;Creates a UTF8 .txt file
 (define (init-file name)
@@ -52,7 +55,7 @@
                      (substring default-password 0 (- 50 (string-length password))))
       ))
 
-;Buffers a string >50 characters
+;Buffers a string >60 characters
 (define (buff-string input)
   (let ((str-len (string-length input)))
     (if (>= str-len 60)
@@ -83,17 +86,13 @@
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
     
-    (when (file-exists? input-file-name)
-      (delete-file input-file-name))
-    
     ;Encrypt and print
     (print-this (list->string (encrypt chars-list key-list password))
-                input-file-name)
+                new-file-name)
     
-    ;Rename the input file
-    (rename-file-or-directory input-file-name
-                              new-file-name))
-  )
+    ;Delete the input file
+    (delete-file input-file-name)
+    ))
 
 
 ;FILE DECRYPTION
@@ -245,7 +244,7 @@
                    ;Save file as .txt
                    (send text-editor save-file curr-file-name 'text)
                    ;Encrypt: Print .locknut, delete .txt
-                   (encrypt-file curr-file-name unbuffed-password)
+                   (encrypt-file curr-file-name (buff-password unbuffed-password))
                    (send editor-frame set-status-text "Encryption finished")
                    ))
        ))
@@ -262,9 +261,7 @@
                    ;Delete the .locknut
                    (let ((lockname (string-append (substring curr-file-name 0 (- (string-length curr-file-name) 4))
                                                   ".locknut")))
-                     (display lockname)
                      (when (file-exists? lockname)
-                       (display "Destroyed")
                        (delete-file lockname)))
                    ))
        ))
