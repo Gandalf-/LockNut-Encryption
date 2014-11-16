@@ -12,18 +12,23 @@
 (require "Encrypt-Algorithm.rkt")
 
 ;Provisions to LockNut.rkt
-(provide run-encrypt-decrypt)
 (provide glance)
 (provide create-file)
 (provide print-this)
 
+;Globals
+(define curr-file-name "")
+(define unbuffed-password "")
 
 ;FILE IO
 ;----------------------------------------------------------------------
 
 ;Moves the file into a string
 (define (file->listChars filename)
-  (port->string (open-input-file filename)))
+  (letrec ((in (open-input-file filename))
+           (out (port->string in)))
+    (close-input-port in)
+    out))
 
 ;Creates a UTF8 .txt file
 (define (init-file name)
@@ -50,12 +55,20 @@
                      (substring default-password 0 (- 50 (string-length password))))
       ))
 
+;Buffers a string >60 characters
+(define (buff-string input)
+  (let ((str-len (string-length input)))
+    (if (>= str-len 60)
+        (string-append "..." (substring input (- str-len 60) str-len))
+        input)
+    ))
+
 ;CALLEES
 ;================================================
 
 ;FILE ENCRYPTION
 ; CALLED BY CREATE-FILE, GLANCE, AND RUN-ENCRYPT-DECRYPT
-; Takes a file as input and prints the encrypted version of the file to a text file
+; Takes a file as input and prints the encrypted version of the file to a .locknut file
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
   
@@ -75,12 +88,11 @@
     
     ;Encrypt and print
     (print-this (list->string (encrypt chars-list key-list password))
-                input-file-name)
+                new-file-name)
     
-    ;Rename the input file
-    (rename-file-or-directory input-file-name
-                              new-file-name))
-  )
+    ;Delete the input file
+    (delete-file input-file-name)
+    ))
 
 
 ;FILE DECRYPTION
@@ -90,7 +102,7 @@
 ; If glancing, open the file in notepad and delete when the user is finished.
 ; Otherwise, rename the decrypted text file to the original name of the input
 ;--------------------------------------------------------------------------------
-(define (decrypt-file input-file-name password glance?)
+(define (decrypt-file input-file-name password)
   
   (let (;Get the char-list from the encryped file
         (chars-list (string->list (file->listChars input-file-name)))
@@ -107,94 +119,36 @@
     (let ((decrypted-file (list->string (encrypt chars-list
                                                  solver-list
                                                  password)) ))
-            
-      ;Check whether to glance or save decrypt file
-      (if (equal? #t glance?)
+      
+      ;Verify password against buffered password, and glance
+      (if (equal? (substring decrypted-file 0 50) password)
+          ;Valid password: print file, show editor, load in editor
+          (begin
+            (set! curr-file-name new-file-name)
+            ;Print file
+            (print-this (substring decrypted-file 50 (string-length decrypted-file))
+                        "Data/tmp.locknut")
+            (send file-info set-label (buff-string input-file-name))
+            (send text-editor load-file "Data/tmp.locknut")
+            (send editor-frame show #t)
+            ;Cleanup
+            (delete-file "Data/tmp.locknut"))
           
-          ;Verify password against buffered password, and glance
-          (if (equal? (substring decrypted-file 0 50)
-                      password)
-              
-              ;Valid password, remove password from beginning and show in notepad
-              (begin
-                (print-this (substring decrypted-file 50 (string-length decrypted-file))
-                            "Glance.txt")
-                (system "notepad.exe Glance.txt")
-                (delete-file "Glance.txt"))
-              
-              ;Invalid password
-              #f)
-          
-          ;Verify buffered password and save decrypted file
-          (if (equal? (substring decrypted-file 0 50)
-                      password)
-              
-              ;Valid password
-              (begin
-                ;Remove the password and print the file
-                (print-this (substring decrypted-file 50 (string-length decrypted-file))
-                            input-file-name)
-                ;Rename the encrypted version
-                (rename-file-or-directory input-file-name
-                                          new-file-name))
-              
-              ;Invalid password
-              #f)
-          )
-      ))
-  )
+          ;Invalid password
+          #f))
+    ))
 
 
 ;CALLERS
 ;================================================================
 
-;RUN-ENCRYPT-DECRYPT
-; CALLS ENCRYPT-FILE AND DECRYPT-FILE
-; Checks the password field, prompts the user to
-; choose a file, detect where to encrypt or decrypt,
-; pass user options along to encrypt()
-;---------------------------------------------
-(define (run-encrypt-decrypt password password-is-key?-value shareable?)
-  
-  ;Check for blank password, then generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver (buff-password password)
-                                          password-is-key?-value
-                                          shareable?))
-  ;Get file choice
-  (let ((chosen-file (get-file)))
-    (if (equal? chosen-file #f)
-        "No file chosen"
-        
-        (begin
-          (set! chosen-file (path->string chosen-file))
-          
-          ;Decrypt .locknut files, encrypt all other files
-          (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-              ;Run decryption
-              (if (decrypt-file chosen-file password #f)
-                  ;Success
-                  "Finished decrypting!"
-                  
-                  ;Invalid password, nothing done
-                  "Invalid password or incorrect base-key")
-              
-              ;Check if .txt && run encryption
-              (if (equal? ".txt" (substring chosen-file (- (string-length chosen-file) 4)))
-                  (begin
-                    (encrypt-file chosen-file password)
-                    "Finished encrypting!")
-                  
-                  "Only .txt files may be encrypted"))
-          ))
-    ))
-
-
 ;GLANCE
 ; CALLS DECRYPT-FILE
-; Decrypts a file using the optional password,
-; but just opens it in notepad. Decrypted file isn't saved
+; Checks the filename and passes info back up
 ;---------------------------------------------
 (define (glance password password-is-key?-value shareable?)
+  ;Save password in case the user wants to re-encrypt
+  (set! unbuffed-password password)
   
   ;Buffer password, then generate the cipher key-list and solver-list
   (set! password (generate-key-and-solver (buff-password password)
@@ -205,22 +159,15 @@
     ;Valid file choice?
     (if (equal? chosen-file #f)
         "No file chosen"
-        
         (begin
           (set! chosen-file (path->string chosen-file))
-          
-          ;Decrypt .locknut files, open in notepad
           ;Check if file is .locknut extension
           (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
               (begin
-                (if (decrypt-file chosen-file password #t)
-                    ;Success
+                (if (decrypt-file chosen-file password)
                     "Finished decrypting!"
-                    
-                    ;Invalid password, nothing done
                     "Invalid password or incorrect base-key"))
               
-              ;Wrong extension
               "File must be encrypted .locknut file")
           ))
     ))
@@ -230,34 +177,103 @@
 ;CALLS ENCRYPT
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
-  ;Check if file name is not blank
-  (if (equal? given-file-name "")
-      ;Invalid file name
-      "File name must not be blank"
-      
-      ;Check if file name already exists
-      (if (or (file-exists? (string-append given-file-name ".txt"))
-              (file-exists? (string-append given-file-name ".locknut")))
-          "File of that name already exists"
-          
-          (let ((full-file-name (string-append given-file-name ".txt")))
-            ;Buffer password and generate the cipher key-list and solver-list
-            (set! password (generate-key-and-solver (buff-password password)
-                                                    password-is-key?-value
-                                                    shareable?))
-            
-            ;Create file
-            ;(init-file full-file-name)
-            (print-this " " full-file-name)
-            
-            ;Open file
-            (system (string-append "notepad.exe " full-file-name))
-            
-            ;Encrypt file
-            (encrypt-file full-file-name password)
-            "Finished encrypting!"
-            ))
-      ))
+ 
+  ;Buffer password and generate the cipher key-list and solver-list
+  (set! password (generate-key-and-solver (buff-password password)
+                                          password-is-key?-value
+                                          shareable?))
+  ;Encrypt file
+  (encrypt-file given-file-name password)
+  )
+
+
+;NEW WINDOW EDITOR
+;----------------------------------------------
+(define editor-frame
+  (new frame%
+       (label "LockNut Editor")
+       (width 500)
+       (height 400)))
+
+(send editor-frame create-status-line)
+
+;Panel for editor text fields
+(define editor-info-panel
+  (instantiate vertical-panel% (editor-frame)
+    (stretchable-height #f)
+    ))
+
+;Displays the filename of the decrypted file
+(define file-info
+  (new message%
+       (label "Filename: ")
+       (parent editor-info-panel)
+       (stretchable-width #t)
+       (auto-resize #t)
+       ))
+
+(define editor-canvas
+  (new editor-canvas%
+       (parent editor-frame)))
+
+(define text-editor
+  (new text%))
+
+(define mb (new menu-bar% [parent editor-frame]))
+(define m-edit (new menu% [label "Edit"] [parent mb]))
+(define m-font (new menu% [label "Font"] [parent mb]))
+(append-editor-operation-menu-items m-edit #f)
+(append-editor-font-menu-items m-font)
+
+
+(send editor-canvas set-editor text-editor)
+
+;Panel for editor buttons
+(define editor-button-panel
+  (instantiate horizontal-panel% (editor-frame)
+    (stretchable-height #f)
+    ))
+
+;Save and reencrypt the changes to the file
+(define editor-reencrypt
+  (new button%
+       (label "Encrypt changes")
+       (parent editor-button-panel)
+       (callback (lambda (b e)
+                   (send editor-frame set-status-text "Encrypting...")
+                   ;Save file as .txt
+                   (send text-editor save-file curr-file-name 'text)
+                   ;Encrypt: Print .locknut, delete .txt
+                   (encrypt-file curr-file-name (buff-password unbuffed-password))
+                   (send editor-frame set-status-text "Encryption finished. Original deleted.")
+                   ))
+       ))
+
+;Save to plain text
+(define editor-decrypt
+  (new button%
+       (label "Save to plaintext")
+       (parent editor-button-panel)
+       (callback (lambda (b e)
+                   (send editor-frame set-status-text "File saved. Encrypted version deleted.")
+                   ;Save to .txt
+                   (send text-editor save-file curr-file-name 'text)
+                   ;Delete the .locknut
+                   (let ((lockname (string-append (substring curr-file-name 0 (- (string-length curr-file-name) 4))
+                                                  ".locknut")))
+                     (when (file-exists? lockname)
+                       (delete-file lockname)))
+                   ))
+       ))
+
+;Close
+(define editor-close
+  (new button%
+       (label "Close")
+       (parent editor-button-panel)
+       (callback (lambda (b e)
+                   ;(send t save-file file-name 'text)
+                   (send editor-frame show #f)))))
 
 
 

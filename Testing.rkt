@@ -8,9 +8,15 @@
       (set! out (flatten (cons out c))))
     out))
 
-;Moves the file into a string
 (define (file->listChars filename)
-  (port->string (open-input-file filename)))
+  (letrec ((in (open-input-file filename))
+           (out (port->string in)))
+    (close-input-port in)
+    out))
+
+;;Moves the file into a string
+;(define (file->listChars filename)
+;  (port->string (open-input-file filename)))
 
 ;Creates a UTF8 .txt file
 (define (init-file name)
@@ -28,8 +34,8 @@
 ;(init-file "ABC.txt")
 ;(print-this "“Papa? What is it?” λ, α, γ ..." "ABC.txt")
 
-;(file->listChars "ABC.txt")
-(list->string (read-this "Out.txt"))
+(file->listChars "TurkeyFood.txt")
+;(list->string (read-this "Out.txt"))
 
 
 (define f
@@ -61,10 +67,21 @@
 
 
 (send c set-editor t)
-(send f show #t)
+;(send f show #t)
+;(send t load-file "Hebrew.txt")
 
 
-;(send t save-file "Example.txt" 'text)
+;Buffers a string >50 characters
+(define (buff-string input)
+  (let ((str-len (string-length input)))
+    (if (>= str-len 30)
+        (string-append "..." (substring input (- str-len 30) str-len))
+        input)
+    ))
+
+(define in "There once was a very long sentence with very many characters. It was long.")
+
+(buff-string in)
  
 
 
