@@ -61,11 +61,21 @@
 
 
 (send c set-editor t)
-(send f show #t)
-(send t load-file "Hebrew.txt")
+;(send f show #t)
+;(send t load-file "Hebrew.txt")
 
 
-;(send t save-file "Example.txt" 'text)
+;Buffers a string >50 characters
+(define (buff-string input)
+  (let ((str-len (string-length input)))
+    (if (>= str-len 30)
+        (string-append "..." (substring input (- 30 str-len) str-len))
+        input)
+    ))
+
+(define in "There once was a very long sentence with very many characters. It was long.")
+
+(buff-string in)
  
 
 

@@ -56,40 +56,32 @@
        (font my-font)
        ))
 
-;Button for file encryption or decryption
-(define run-button
-  (new button% 
-       (label "Encrypt/Decrypt File")
+;Button that opens create-file-frame, MAIN-FRAME
+(define create-file-button
+  (new button%
+       (label "Create Encrypted File")
        (parent panel)
-       (horiz-margin 17)
+       (horiz-margin 6)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
-                       (begin
-                         ;Run encrypt/decrypt, update status text
-                         (send main-frame set-status-text "Working...")
-                         (send main-frame set-status-text 
-                               (run-encrypt-decrypt (send passcode-field get-value)
-                                                    (send password-is-key-checkbox get-value)
-                                                    (send shareable-file-checkbox get-value)))
-                         ;Push password changes into other passcode fields
-                         (send create-file-passcode-field set-value (send passcode-field get-value)))
+                       (send create-file-frame show #t)
                        ;Help mode
                        (begin
-                         (send main-frame set-status-text "Choose a .txt file to be encrypted...")
+                         (set! help-mode #f)
+                         (send main-frame set-status-text "Opens window with options for creating a...")
                          (sleep/yield wait-time)
-                         (send main-frame set-status-text " or a .locknut file to be unencrypted")
+                         (send main-frame set-status-text "new encrypted file right now")
                          (sleep/yield wait-time)
-                         (send main-frame set-status-text " ")
-                         (set! help-mode #f)))
+                         (send main-frame set-status-text " ")))
                    ))
        ))
 
-;Button for glance procedure
-(define glance-button
+;Button for unencrypt procedure
+(define unencrypt-button
   (new button%
-       (label "Glance")
+       (label "Unencrypt File")
        (parent panel)
-       (horiz-margin 8)
+       (horiz-margin 5)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
                        (begin
@@ -100,7 +92,8 @@
                                        (send password-is-key-checkbox get-value)
                                        (send shareable-file-checkbox get-value)))
                          ;Push password changes into other passcode fields
-                         (send create-file-passcode-field set-value (send passcode-field get-value)))
+                         (send create-file-passcode-field set-value
+                               (send passcode-field get-value)))
                        
                        ;Help mode
                        (begin
@@ -108,26 +101,6 @@
                          (send main-frame set-status-text "Choose a .locknut file to view unecrypted...")
                          (sleep/yield wait-time)
                          (send main-frame set-status-text " but keep the file itself encrypted.")
-                         (sleep/yield wait-time)
-                         (send main-frame set-status-text " ")))
-                   ))
-       ))
-
-;Button that opens create-file-frame, MAIN-FRAME
-(define create-file-button
-  (new button%
-       (label "Create New File")
-       (parent create-options-panel)
-       (horiz-margin 30)
-       (callback (lambda (button event)
-                   (if (equal? help-mode #f)
-                       (send create-file-frame show #t)
-                       ;Help mode
-                       (begin
-                         (set! help-mode #f)
-                         (send main-frame set-status-text "Opens window with options for creating a...")
-                         (sleep/yield wait-time)
-                         (send main-frame set-status-text "new encrypted file right now")
                          (sleep/yield wait-time)
                          (send main-frame set-status-text " ")))
                    ))
@@ -193,8 +166,8 @@
 
 ;Panel for create-file text fields
 (define create-file-panel-text (instantiate vertical-panel% (create-file-frame)
-                            (stretchable-height #f)
-                            ))
+                                 (stretchable-height #f)
+                                 ))
 
 (define mb (new menu-bar% [parent create-file-frame]))
 (define m-edit (new menu% [label "Edit"] [parent mb]))
@@ -249,35 +222,31 @@
                      (if (string=? "" file-name)
                          (send create-file-frame set-status-text "File name must not be blank")
                          
-                         ;Check if file already exists
-                         (if (file-exists? file-name)
-                             (send create-file-frame set-status-text "File name already exists")
-                             
-                             (begin
-                               ;Create the file
-                               (send text-field save-file file-name 'text)
-                               
-                               ;Run encrypt/decrypt, update status text
-                               (send create-file-frame set-status-text "Working...")
-                               (create-file file-name
-                                            password
-                                            pass-key?
-                                            shareable?
-                                            )
-                               (send main-frame set-status-text "File created and encrypted")
-                               
-                               ;Hide create-file window
-                               (send create-file-frame show #f)
-                               ;Password changes onto other passcode fields
-                               (send passcode-field set-value (send create-file-passcode-field get-value))
-                               )))
+                         (begin
+                           ;Create the file
+                           (send text-field save-file file-name 'text)
+                           
+                           ;Run encrypt/decrypt, update status text
+                           (send create-file-frame set-status-text "Working...")
+                           (create-file file-name
+                                        password
+                                        pass-key?
+                                        shareable?
+                                        )
+                           (send main-frame set-status-text "Encryption complete")
+                           
+                           ;Hide create-file window
+                           (send create-file-frame show #f)
+                           ;Password changes onto other passcode fields
+                           (send passcode-field set-value (send create-file-passcode-field get-value))
+                           ))
                      )))
        ))
 
 ;Load preexisting file into the editor
 (define create-file-load
   (new button%
-       (label "Load file")
+       (label "Load existing file")
        (parent create-file-panel)
        (callback (lambda (b e)
                    ;Get and verify file
@@ -294,9 +263,11 @@
                                (begin
                                  ;Load file
                                  (send text-field load-file chosen-file)
-                                 ;Update fields
-                                 (send create-file-passcode-field set-value (send passcode-field get-value))
-                                 (send create-file-filename-field set-value chosen-file)
+                                 ;Update fields, remove .txt from loaded file name
+                                 (send create-file-passcode-field set-value
+                                       (send passcode-field get-value))
+                                 (send create-file-filename-field set-value
+                                       (substring chosen-file 0 (- (string-length chosen-file) 4)))
                                  
                                  (send create-file-frame set-status-text "File loaded"))
                                )))
