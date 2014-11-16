@@ -12,7 +12,7 @@
 (require "Encrypt-Algorithm.rkt")
 
 ;Provisions to LockNut.rkt
-(provide glance)
+(provide decrypt)
 (provide create-file)
 (provide print-this)
 
@@ -67,7 +67,7 @@
 ;================================================
 
 ;FILE ENCRYPTION
-; CALLED BY CREATE-FILE, GLANCE, AND RUN-ENCRYPT-DECRYPT
+; CALLED BY CREATE-FILE, decrypt
 ; Takes a file as input and prints the encrypted version of the file to a .locknut file
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
@@ -96,7 +96,7 @@
 
 
 ;FILE DECRYPTION
-; CALLED BY CREATE-FILE, GLANCE, AND RUN-ENCRYPT-DECRYPT
+; CALLED BY CREATE-FILE, decrypt
 ; Takes an encrypted .locknut file as input and prints the decrypted version of the 
 ; file to a text file.
 ; If glancing, open the file in notepad and delete when the user is finished.
@@ -120,7 +120,7 @@
                                                  solver-list
                                                  password)) ))
       
-      ;Verify password against buffered password, and glance
+      ;Verify password against buffered password, and decrypt
       (if (equal? (substring decrypted-file 0 50) password)
           ;Valid password: print file, show editor, load in editor
           (begin
@@ -142,11 +142,11 @@
 ;CALLERS
 ;================================================================
 
-;GLANCE
+;decrypt
 ; CALLS DECRYPT-FILE
 ; Checks the filename and passes info back up
 ;---------------------------------------------
-(define (glance password password-is-key?-value shareable?)
+(define (decrypt password password-is-key?-value shareable?)
   ;Save password in case the user wants to re-encrypt
   (set! unbuffed-password password)
   

@@ -33,15 +33,10 @@
 (define background-image (new message% [parent main-frame] 
                               (label (make-object bitmap% "Support/Nut2.jpg"))))
 
-;Panel for file encryption or decryption, glance, and passcode-field
+;Panel for file encrypt and decrypt
 (define panel (instantiate horizontal-panel% (main-frame)
                 (stretchable-height #f)
                 ))
-
-;Panel for create file and options buttons
-(define create-options-panel (instantiate horizontal-panel% (main-frame)
-                               (stretchable-height #f)
-                               ))
 
 ;Panel for information and help buttons
 (define info-help-panel (instantiate horizontal-panel% (main-frame)
@@ -59,9 +54,9 @@
 ;Button that opens create-file-frame, MAIN-FRAME
 (define create-file-button
   (new button%
-       (label "Create Encrypted File")
+       (label "Encrypted File")
        (parent panel)
-       (horiz-margin 6)
+       (horiz-margin 22)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
                        (send create-file-frame show #t)
@@ -77,20 +72,22 @@
        ))
 
 ;Button for unencrypt procedure
-(define unencrypt-button
+(define decrypt-button
   (new button%
-       (label "Unencrypt File")
+       (label "Decrypt File")
        (parent panel)
-       (horiz-margin 5)
+       (horiz-margin 10)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
                        (begin
-                         ;Run glance, update status text
+                         ;Run decrypt, update status text
                          (send main-frame set-status-text "Working...")
+                         ;Decrypt
                          (send main-frame set-status-text
-                               (glance (send passcode-field get-value)
-                                       (send password-is-key-checkbox get-value)
-                                       (send shareable-file-checkbox get-value)))
+                               (decrypt
+                                (send passcode-field get-value)
+                                (send password-is-key-checkbox get-value)
+                                (send shareable-file-checkbox get-value)))
                          ;Push password changes into other passcode fields
                          (send create-file-passcode-field set-value
                                (send passcode-field get-value)))
@@ -98,9 +95,7 @@
                        ;Help mode
                        (begin
                          (set! help-mode #f)
-                         (send main-frame set-status-text "Choose a .locknut file to view unecrypted...")
-                         (sleep/yield wait-time)
-                         (send main-frame set-status-text " but keep the file itself encrypted.")
+                         (send main-frame set-status-text "Shows options to decrypt .locknut files")
                          (sleep/yield wait-time)
                          (send main-frame set-status-text " ")))
                    ))
@@ -110,8 +105,8 @@
 (define options-button
   (new button%
        (label "Options")
-       (parent create-options-panel)
-       (horiz-margin 8)
+       (parent info-help-panel)
+       (horiz-margin 15)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
                        (send options-frame show #t)
@@ -127,9 +122,9 @@
 ;Button that displays info, MAIN-FRAME
 (define info-button
   (new button%
-       (label "Information")
+       (label "Info")
        (parent info-help-panel)
-       (horiz-margin 40)
+       (horiz-margin 0)
        (callback (lambda (button event)
                    (if (equal? help-mode #f)
                        (send info-frame show #t)
@@ -145,9 +140,9 @@
 ;Help button, MAIN-FRAME
 (define help-button
   (new button%
-       (label "Help Mode")
+       (label "Help")
        (parent info-help-panel)
-       (horiz-margin 3)
+       (horiz-margin 12)
        (callback (lambda
                      (button event)
                    (set! help-mode #t)

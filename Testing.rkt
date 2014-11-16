@@ -34,7 +34,7 @@
 ;(init-file "ABC.txt")
 ;(print-this "“Papa? What is it?” λ, α, γ ..." "ABC.txt")
 
-(file->listChars "TurkeyFood.txt")
+;(file->listChars "TurkeyFood.txt")
 ;(list->string (read-this "Out.txt"))
 
 
@@ -79,7 +79,7 @@
         input)
     ))
 
-(define in "There once was a very long sentence with very many characters. It was long.")
+(define in "C:\\Users\\Weyandawik\\Documents\\My Documents\\CompSci\\Scheme")
 
 (buff-string in)
  

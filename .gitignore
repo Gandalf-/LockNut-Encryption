@@ -6,3 +6,5 @@ Testing!.txt
 *.md~
 Testing.rkt
 *.1
+*.dep
+*.zo
