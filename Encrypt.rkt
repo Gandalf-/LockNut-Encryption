@@ -245,7 +245,7 @@
                    (send text-editor save-file curr-file-name 'text)
                    ;Encrypt: Print .locknut, delete .txt
                    (encrypt-file curr-file-name (buff-password unbuffed-password))
-                   (send editor-frame set-status-text "Encryption finished")
+                   (send editor-frame set-status-text "Encryption finished. Original deleted.")
                    ))
        ))
 
@@ -269,7 +269,7 @@
 ;Close
 (define editor-close
   (new button%
-       (label "Close without saving")
+       (label "Close")
        (parent editor-button-panel)
        (callback (lambda (b e)
                    ;(send t save-file file-name 'text)
