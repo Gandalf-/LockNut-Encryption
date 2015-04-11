@@ -1,0 +1,3 @@
+#!/bin/bash
+
+racket LockNutCLI.rkt $1 $2 $3 $4 $5 $6

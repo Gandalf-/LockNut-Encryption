@@ -18,9 +18,33 @@
 (define help-mode #f)
 (define wait-time 1.5)
 
-;Decrypt
+; Commandline arguements
+(define pass "")
+(define file "")
+(define encrypt? #f)
+(define decrypt? #f)
+(define share? #f)
+(define pass-is-key? #f)
+(define help? #f)
 
-;Encrypt
+(define locknut
+  (command-line
+    #:program "Locknut"
+    #:once-any
+    (("-e") "Encrypt file"
+            (set! encrypt? #t))
+    (("-d") "Decrypt file"
+            (set! decrypt? #t))
+    #:once-each
+    (("-s") "Use standard key"
+            (set! share? #t))
+    (("-V") "Password is key"
+            (set! pass-is-key? #t))
+    (("-p") password
+            "Password"
+            (set! pass password))
+    #:args (filename password)
+    (set! file filename)))
 
 ;Creates a string of 250 random integers [0-200]
 (define (generate-personal-key)
@@ -47,6 +71,14 @@
       (print-this (generate-personal-key) "Data/PersonalKey.locknut")
       (sleep 1.5)
       (displayln "Personal encryption key generated. Ready.")
-      ))
+      )))
 
-  (startup)
+(startup)
+
+;Decrypt
+(when decrypt?
+  (decrypt file pass pass-is-key? share?))
+
+;Encrypt
+(when encrypt?
+  (create-file file pass pass-is-key? share?) )
