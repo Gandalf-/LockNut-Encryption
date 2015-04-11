@@ -1,10 +1,12 @@
 *.locknut
+*.txt
+*.rkt~
 *.zip
-Testing!.txt
 *.bak
 *.swp
 *.md~
 Testing.rkt
+Polish.rkt
 *.1
 *.dep
 *.zo

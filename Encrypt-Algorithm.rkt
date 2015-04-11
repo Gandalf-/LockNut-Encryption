@@ -29,97 +29,73 @@
 
 ;Gets the personal key from file
 (define (get-personal-key)
-  (let loop ((in (string-split (file->listChars "Data/PersonalKey.locknut")))
-             (out '() ))
-    (if (empty? in)
-        out
-        (loop (cdr in)
-              (flatten (cons out (string->number (car in))))
-              ))
-    ))
+  map
+  string->number
+  (string-split (file->listChars "Data/PersonalKey.locknut")))
+
 
 ;Take the inverse of the encryption key to make the decryption key
 ;Creates the inverse of the key-list for solving
 (define (create-solver key-list)
-  (let loop ((input key-list)
-             (output '()))
-    (if (empty? input)
-        output
-        (loop (cdr input)
-              (flatten (cons output (* -1 (car input)))))
-        )))
+  (map
+   (lambda (x) (* -1 x))
+   key-list))
 
 ;Make encryption key
 ;Generate a key-list (list of integers indicating shift amounts) from the given password
 (define (password->key-list password)
-  (let loop ((input (string->list password))
-             (output '() ))
-    (if (empty? input)
-        output
-        (loop (cdr input)
-              (flatten (cons output (char->integer (car input)))))
-        )))
+  (map
+   (lambda (x) (char->integer x))
+   (string->list password)))
+
 
 ;Add the password-key-list to the default key-list, to make it unique to the given password
-(define (alter-key-list default-key-list pass-input-list)
-  (let loop ((default-list default-key-list)
-             (pass-list pass-input-list)
-             (output '() ))
-    (if (empty? default-list)
-        output
-        (begin
-          ;Reset the pass-list
-          (when (empty? pass-list)
-            (set! pass-list pass-input-list))
-          
-          (loop (cdr default-list)
-                (cdr pass-list) 
-                (flatten (cons output (+ (car default-list)
-                                         (car pass-list)))))
-          ))
-    ))
+(define (alter-key-list def-key pass-key)
+  (if (< (length pass-key) (length default-key))
+      (alter-key-list def-key (flatten (cons pass-key pass-key)))
+      (map
+       (lambda (x y)
+         (+ x y))
+       (map string->number def-key)
+       (take (flatten pass-key) (length def-key)))))
+
 
 ;Determine the starting position in the default key from the given password
 ; Add all integer values of chars in password-key-list and modulo by the length
 ; of the default key
 (define (password->starting-position password)
-  (let loop ((pass-list (password->key-list password))
-             (output 0))
-    (if (empty? pass-list)
-        (modulo output key-length)
-        (loop (cdr pass-list)
-              (+ output (car pass-list))))
-    ))
+  (modulo 
+    (foldl + 0 (password->key-list password))
+    key-length))
 
 
 ;Checks for blank password, then generates the both the encryption and decryption
 ; keys. These aren't passed out. They're values are set to key-list and solver-list,
 ; predefined variables
-(define (generate-key-and-solver password password-is-key?-value shareable?)
-  
+(define (generate-key-and-solver password pass-is-key? shareable?)
+
   ;Determine which base-key to use. Default for shareable, Personal for not shareable
-  (let ((base-key '()))
+  (let ((base-key '() ))
     (if (equal? #t shareable?)
-        ;Use the default, shareable
-        (set! base-key default-key)
-        ;Use personal key, non-shareable
-        (set! base-key (get-personal-key)))
-    
+      ;Use the default, shareable
+      (set! base-key default-key)
+      ;Use personal key, non-shareable
+      (set! base-key (get-personal-key)))
+
     ;Check if password is being used as the cipher key
-    (if password-is-key?-value
-        ;Use password as key
-        (begin
-          (set! key-list (password->key-list password))
-          (set! solver-list (create-solver key-list)))
-        ;Use default key, which includes the password
-        (begin
-          ;Modify the key-list with the password
-          (set! key-list (alter-key-list base-key (password->key-list password)))
-          (set! solver-list (create-solver key-list)))
-        )
+    (if pass-is-key?
+      ;Use password as key
+      (begin
+        (set! key-list (password->key-list password))
+        (set! solver-list (create-solver key-list)))
+      ;Use default key, which includes the password
+      (begin
+        ;Modify the key-list with the password
+        (set! key-list (alter-key-list base-key (password->key-list password)))
+        (set! solver-list (create-solver key-list)))
+      )
     ;Return password in case it's been set to the default value
-    password
-    ))
+    password))
 
 
 ;DEFINITIONS
@@ -145,37 +121,19 @@
 ;----------------------------------------------------------------------
 ; Takes a list of characters and returns a list of encrypted characters  
 (define (encrypt input-list key-list password)
-  
-  ;Run algorithm
-  (let loop ((output-list '() )
-             (remaining-input input-list)
-             ;Choose the starting position of the input-key with password->starting position
-             (current-key-list (list-tail key-list
-                                          (password->starting-position password)
-                                          )))
-    (if (empty? remaining-input)
-        output-list
-        
-        (begin
-          ;Refill the key-list when it's empty
-          (when (empty? current-key-list)
-            (set! current-key-list key-list))
-          
-          ;Create the new shifted-integer from the current key-list value added
-          ; to the current input-list value
-          (let ((shifted-integer (+ (car current-key-list) 
-                                    (char->integer (car remaining-input)))))
-                       
-            ;Incorrect password results in negative shift amount
-            ; default to 0 shift, the result will be still be incorrect
-            (when (> 0 shifted-integer)
-              (set! shifted-integer 0))
 
-            ;Continue loop with new encrypted character added to the output list
-            (loop (flatten (cons output-list
-                                 (integer->char shifted-integer)))
-                  (cdr remaining-input)
-                  (cdr current-key-list)
-                  ))
-          ))
-    ))
+  (define (prep-key key)
+    (if (< (length key) (length input-list))
+      (prep-key (flatten (cons key key-list)))
+      (take (flatten key) (length input-list))))
+  (map
+    (lambda (x y)
+      ; Incorrect passwords can result in negative shifts, default to zero.
+      (integer->char (if (> 0 (+ x y))
+                       0
+                       (+ x y))))
+    (map char->integer
+         input-list)
+    (prep-key (list-tail
+                key-list
+                (password->starting-position password)))))
