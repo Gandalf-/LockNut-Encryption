@@ -7,7 +7,6 @@
 ;Functions that work between the algorithm and the GUI, handle file IO
 ;----------------------------------------------------------------------
 
-(require racket/gui)
 (require racket/port)
 (require "Encrypt-Algorithm.rkt")
 
@@ -179,60 +178,13 @@
 (define (create-file given-file-name password password-is-key?-value shareable?)
   
   ;Buffer password and generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver (buff-password password)
-                                          password-is-key?-value
-                                          shareable?))
+  (set! password (generate-key-and-solver 
+                   (buff-password password)
+                   password-is-key?-value
+                   shareable?))
   ;Encrypt file
-  (encrypt-file given-file-name password)
-  )
+  (encrypt-file given-file-name password))
 
-
-;NEW WINDOW EDITOR
-;----------------------------------------------
-(define editor-frame
-  (new frame%
-       (label "LockNut Editor")
-       (width 500)
-       (height 400)))
-
-(send editor-frame create-status-line)
-
-;Panel for editor text fields
-(define editor-info-panel
-  (instantiate vertical-panel% (editor-frame)
-    (stretchable-height #f)
-    ))
-
-;Displays the filename of the decrypted file
-(define file-info
-  (new message%
-       (label "Filename: ")
-       (parent editor-info-panel)
-       (stretchable-width #t)
-       (auto-resize #t)
-       ))
-
-(define editor-canvas
-  (new editor-canvas%
-       (parent editor-frame)))
-
-(define text-editor
-  (new text%))
-
-(define mb (new menu-bar% [parent editor-frame]))
-(define m-edit (new menu% [label "Edit"] [parent mb]))
-(define m-font (new menu% [label "Font"] [parent mb]))
-(append-editor-operation-menu-items m-edit #f)
-(append-editor-font-menu-items m-font)
-
-
-(send editor-canvas set-editor text-editor)
-
-;Panel for editor buttons
-(define editor-button-panel
-  (instantiate horizontal-panel% (editor-frame)
-    (stretchable-height #f)
-    ))
 
 ;Save and reencrypt the changes to the file
 (define editor-reencrypt
@@ -265,19 +217,3 @@
                        (delete-file lockname)))
                    ))
        ))
-
-;Close
-(define editor-close
-  (new button%
-       (label "Close")
-       (parent editor-button-panel)
-       (callback (lambda (b e)
-                   ;(send t save-file file-name 'text)
-                   (send editor-frame show #f)))))
-
-
-
-
-
-
-
