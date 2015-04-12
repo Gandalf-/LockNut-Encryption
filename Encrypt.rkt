@@ -38,29 +38,28 @@
 
 ;Prints x to a file
 (define (print-this x name)
-  (call-with-output-file* name #:exists 'replace
-                          (lambda (output-port)
-                            (display x output-port))))
+  (call-with-output-file*
+    name #:exists 'replace
+    (lambda (output-port)
+      (display x output-port))))
 
 ;HELPERS
 ;------------
-;Buffers the password to 50 characters
+;Buffers the password to 50 characters using the default password
 (define (buff-password password)
-  ;Check if it's longer than 50 characters already
   (if (>= (string-length password) 50)
-      (substring password 0 50)
-      ;Buffer it using the default password
-      (string-append password 
-                     (substring default-password 0 (- 50 (string-length password))))
-      ))
+    (substring password 0 50)
+    (string-append password 
+                   (substring default-password 
+                              0
+                              (- 50 (string-length password)))) ))
 
 ;Buffers a string >60 characters
 (define (buff-string input)
   (let ((str-len (string-length input)))
     (if (>= str-len 60)
-        (string-append "..." (substring input (- str-len 60) str-len))
-        input)
-    ))
+      (string-append "..." (substring input (- str-len 60) str-len))
+      input) ))
 
 ;CALLEES
 ;================================================
@@ -70,28 +69,31 @@
 ; Takes a file as input and prints the encrypted version of the file to a .locknut file
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
-  
   (let (;Get list of chars from source file
-        (chars-list (string->list (file->listChars input-file-name)))
+        (chars-list (string->list
+                      (file->listChars input-file-name)))
         ;Remove .txt and add .locknut extension
-        (new-file-name (string-append (substring input-file-name 0 (- (string-length input-file-name) 4))
-                                      ".locknut")))
-    
+        (new-file-name (string-append
+                         (substring input-file-name
+                                    0
+                                    (- (string-length input-file-name) 4))
+                         ".locknut")))
+
     ;Add the buffered password onto the beginning of the chars-list, which is the file
     (set! chars-list (append (string->list password)
                              chars-list))
-    
+
     ;Remove the older version of the output file if necessary
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
-    
+
     ;Encrypt and print
     (print-this (list->string (encrypt chars-list key-list password))
                 new-file-name)
-    
+
     ;Delete the input file
     (delete-file input-file-name)
-    ))
+    "Encryption complete" ))
 
 
 ;FILE DECRYPTION
@@ -102,40 +104,36 @@
 ; Otherwise, rename the decrypted text file to the original name of the input
 ;--------------------------------------------------------------------------------
 (define (decrypt-file input-file-name password)
-  
-  (let (;Get the char-list from the encryped file
-        (chars-list (string->list (file->listChars input-file-name)))
+  ;Get the char-list from the encryped file
+  (let ((chars-list (string->list
+                      (file->listChars input-file-name)))
         ;Remove .locknut extension and add .txt
         (new-file-name (string-append
-                        (substring input-file-name 0 (- (string-length input-file-name) 8))
-                        ".txt")))
-    
+                         (substring input-file-name
+                                    0
+                                    (- (string-length input-file-name) 8))
+                         ".txt")))
+
     ;Remove the older version of output file, if necessary
     (when (file-exists? new-file-name)
       (delete-file new-file-name))
-    
+
     ;Decrypt the file with the given buffered password
-    (let ((decrypted-file (list->string (encrypt chars-list
-                                                 solver-list
-                                                 password)) ))
-      
+    (let ((decrypted-file
+            (list->string
+              (encrypt chars-list solver-list password)) ))
+
       ;Verify password against buffered password, and decrypt
       (if (equal? (substring decrypted-file 0 50) password)
-          ;Valid password: print file, show editor, load in editor
-          (begin
-            (set! curr-file-name new-file-name)
-            ;Print file
-            (print-this (substring decrypted-file 50 (string-length decrypted-file))
-                        "Data/tmp.locknut")
-            (send file-info set-label (buff-string input-file-name))
-            (send text-editor load-file "Data/tmp.locknut")
-            (send editor-frame show #t)
-            ;Cleanup
-            (delete-file "Data/tmp.locknut"))
-          
-          ;Invalid password
-          #f))
-    ))
+        (begin
+          ;Valid password: print to file; remove encrypted file
+          (print-this (substring decrypted-file 50 (string-length decrypted-file))
+                      new-file-name)
+          (when (file-exists? input-file-name)
+            (delete-file input-file-name)) )
+
+        ;Invalid password
+        #f)) ))
 
 
 ;CALLERS
@@ -145,38 +143,33 @@
 ; CALLS DECRYPT-FILE
 ; Checks the filename and passes info back up
 ;---------------------------------------------
-(define (decrypt password password-is-key?-value shareable?)
+(define (decrypt file-name password password-is-key?-value shareable?)
   ;Save password in case the user wants to re-encrypt
-  (set! unbuffed-password password)
-  
   ;Buffer password, then generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver (buff-password password)
-                                          password-is-key?-value
-                                          shareable?))
+  (set! unbuffed-password password)
+  (set! password (generate-key-and-solver
+                   (buff-password password)
+                   password-is-key?-value
+                   shareable?))
   ;Get file choice
-  (let ((chosen-file (get-file)))
-    ;Valid file choice?
-    (if (equal? chosen-file #f)
-        "No file chosen"
-        (begin
-          (set! chosen-file (path->string chosen-file))
-          ;Check if file is .locknut extension
-          (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-              (begin
-                (if (decrypt-file chosen-file password)
-                    "Finished decrypting!"
-                    "Invalid password or incorrect base-key"))
-              
-              "File must be encrypted .locknut file")
-          ))
-    ))
+  (let ((chosen-file file-name))
+    (if (not (file-exists? chosen-file))
+      "File does not exist"
+
+      ;Check if file is .locknut extension
+      (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+        (if (decrypt-file chosen-file password)
+          "Decryption complete"
+          "Invalid password or incorrect base-key")
+
+        "File must be encrypted .locknut file") )))
 
 
 ;CREATE NEW ENCRYPTED FILE
 ;CALLS ENCRYPT
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
-  
+
   ;Buffer password and generate the cipher key-list and solver-list
   (set! password (generate-key-and-solver 
                    (buff-password password)
@@ -184,36 +177,3 @@
                    shareable?))
   ;Encrypt file
   (encrypt-file given-file-name password))
-
-
-;Save and reencrypt the changes to the file
-(define editor-reencrypt
-  (new button%
-       (label "Encrypt changes")
-       (parent editor-button-panel)
-       (callback (lambda (b e)
-                   (send editor-frame set-status-text "Encrypting...")
-                   ;Save file as .txt
-                   (send text-editor save-file curr-file-name 'text)
-                   ;Encrypt: Print .locknut, delete .txt
-                   (encrypt-file curr-file-name (buff-password unbuffed-password))
-                   (send editor-frame set-status-text "Encryption finished. Original deleted.")
-                   ))
-       ))
-
-;Save to plain text
-(define editor-decrypt
-  (new button%
-       (label "Save to plaintext")
-       (parent editor-button-panel)
-       (callback (lambda (b e)
-                   (send editor-frame set-status-text "File saved. Encrypted version deleted.")
-                   ;Save to .txt
-                   (send text-editor save-file curr-file-name 'text)
-                   ;Delete the .locknut
-                   (let ((lockname (string-append (substring curr-file-name 0 (- (string-length curr-file-name) 4))
-                                                  ".locknut")))
-                     (when (file-exists? lockname)
-                       (delete-file lockname)))
-                   ))
-       ))
