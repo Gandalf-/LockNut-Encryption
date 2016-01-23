@@ -8,3 +8,4 @@ Testing.rkt
 *.1
 *.dep
 *.zo
+ln_data
