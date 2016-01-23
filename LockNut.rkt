@@ -4,6 +4,7 @@
 ;LockNut Encryption Program
 ;Austin Voecks, Summer 2014
 
+;--------------------------------------------
 ;GUI
 ;--------------------------------------------
 
@@ -19,7 +20,7 @@
 ;----------------------------------------------------------------------
 (define main-frame 
   (new frame%
-       (label "LockNut Encryption")
+       (label "LockNut")
        (stretchable-width #f)
        (stretchable-height #f)))
 
@@ -60,9 +61,11 @@
              ;Help mode
              (begin
                (set! help-mode #f)
-               (send main-frame set-status-text "Opens window with options for creating a...")
+               (send main-frame set-status-text 
+                     "Opens window with options for creating a...")
                (sleep/yield wait-time)
-               (send main-frame set-status-text "new encrypted file right now")
+               (send main-frame set-status-text 
+                     "new encrypted file right now")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")))
            ))
@@ -79,7 +82,8 @@
            (if (equal? help-mode #f)
              (begin
                ;Run decrypt, update status text
-               (send main-frame set-status-text "Working...")
+               (send main-frame set-status-text 
+                     "Working...")
 
                ;Decrypt
                (send main-frame set-status-text
@@ -95,7 +99,8 @@
              ;Help mode
              (begin
                (set! help-mode #f)
-               (send main-frame set-status-text "Shows options to decrypt .locknut files")
+               (send main-frame set-status-text 
+                     "Shows options to decrypt .locknut files")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")))
            ))
@@ -115,7 +120,8 @@
              ;Help mode
              (begin
                (set help-mode #f)
-               (send main-frame set-status-text "Opens window with advanced options")
+               (send main-frame set-status-text 
+                     "Opens window with advanced options")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")))
            ))
@@ -134,7 +140,8 @@
 
              ;Help mode
              (begin
-               (send main-frame set-status-text "Open window with program information")
+               (send main-frame set-status-text 
+                     "Open window with program information")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")
                (set! help-mode #f)))
@@ -151,7 +158,8 @@
          (lambda
            (b e)
            (set! help-mode #t)
-           (send main-frame set-status-text "Click on a button for help")))
+           (send main-frame set-status-text
+                 "Click on a button for help")))
        ))
 
 
@@ -216,33 +224,39 @@
        (parent create-file-panel)
        (callback 
          (lambda (b e)
-           (let ((file-name (string-append (send create-file-filename-field get-value) ".txt"))
+           (let ((file-name (string-append 
+                              (send create-file-filename-field get-value) 
+                              ".txt"))
                  (password (send create-file-passcode-field get-value))
                  (pass-key? (send password-is-key-checkbox get-value))
                  (shareable? (send shareable-file-checkbox get-value)))
 
              ;Check for empty file name
              (if (string=? "" file-name)
-               (send create-file-frame set-status-text "File name must not be blank")
+               (send create-file-frame set-status-text 
+                     "File name must not be blank")
 
                (begin
                  ;Create the file
                  (send text-field save-file file-name 'text)
 
                  ;Run encrypt/decrypt, update status text
-                 (send create-file-frame set-status-text "Working...")
+                 (send create-file-frame set-status-text 
+                       "Working...")
                  (create-file file-name
                               password
                               pass-key?
                               shareable?
                               )
-                 (send main-frame set-status-text "Encryption complete")
+                 (send main-frame set-status-text 
+                       "Encryption complete")
 
                  ;Hide create-file window
                  (send create-file-frame show #f)
 
                  ;Password changes onto other passcode fields
-                 (send passcode-field set-value (send create-file-passcode-field get-value))
+                 (send passcode-field set-value 
+                       (send create-file-passcode-field get-value))
                  ))
              )))
        ))
@@ -258,13 +272,16 @@
            ;Get and verify file
            (let ((chosen-file (get-file)))
              (if (equal? chosen-file #f)
-               (send create-file-frame set-status-text "No file chosen")
+               (send create-file-frame set-status-text 
+                     "No file chosen")
 
                (begin
                  (set! chosen-file (path->string chosen-file))
 
-                 (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
-                   (send create-file-frame set-status-text "Cannot load .locknut files")
+                 (if (equal? ".locknut" 
+                             (substring chosen-file (- (string-length chosen-file) 8)))
+                   (send create-file-frame set-status-text 
+                         "Cannot load .locknut files")
 
                    (begin
                      ;Load file
@@ -277,7 +294,8 @@
                      (send create-file-filename-field set-value
                            (substring chosen-file 0 (- (string-length chosen-file) 4)))
 
-                     (send create-file-frame set-status-text "File loaded"))
+                     (send create-file-frame set-status-text 
+                           "File loaded"))
                    )))
              )))
        ))
@@ -322,10 +340,12 @@
            (if (send password-is-key-checkbox get-value)
 
              ;Use password as key
-             (send options-frame set-status-text "Warning: A short password greatly weakens the encryption")
+             (send options-frame set-status-text 
+                   "Warning: A short password greatly weakens the encryption")
 
              ;Use default
-             (send options-frame set-status-text "Encryption key set back to default values"))))
+             (send options-frame set-status-text 
+                   "Encryption key set back to default values"))))
        ))
 
 ;Shareable files use the standard base key instead of personal key
@@ -339,13 +359,17 @@
 
              ;Shareable file
              (begin
-               (send options-frame set-status-text "Encrypt/decrypt with standard base-key.")
-               (send main-frame set-status-text "Standard base-key loaded. Ready."))
+               (send options-frame set-status-text 
+                     "Encrypt/decrypt with standard base-key.")
+               (send main-frame set-status-text 
+                     "Standard base-key loaded. Ready."))
 
              ;Not Shareable
              (begin
-               (send options-frame set-status-text "Encrypt/decrypt with the personal base-key on this system.")
-               (send main-frame set-status-text "Personal base-key loaded. Ready.")))))
+               (send options-frame set-status-text 
+                     "Encrypt/decrypt with the personal base-key on this system.")
+               (send main-frame set-status-text 
+                     "Personal base-key loaded. Ready.")))))
        ))
 
 ;Close the window
@@ -467,18 +491,25 @@
     (begin
       (send main-frame create-status-line)
       (send main-frame show #t)
-      (send main-frame set-status-text "Personal key loaded. Ready."))
+      (send main-frame set-status-text 
+            "Personal key loaded. Ready."))
 
     ;Create personal key
     (begin
       (send init-frame create-status-line)
       (send init-frame show #t)
-      (send init-frame set-status-text "Running first-time initialization sequence...")
+      (send init-frame set-status-text 
+            "Running first-time initialization sequence...")
+
       (unless (directory-exists? "ln_data")
         (make-directory "ln_data"))
-      (print-this (generate-personal-key) "ln_data/PersonalKey.locknut")
+
+      (print-this (generate-personal-key) 
+                  "ln_data/PersonalKey.locknut")
+
       (sleep 1.5)
-      (send init-frame set-status-text "Personal encryption key generated. Ready.")
+      (send init-frame set-status-text 
+            "Personal encryption key generated. Ready.")
       )))
 
 (startup)
