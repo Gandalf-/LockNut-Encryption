@@ -50,60 +50,43 @@
 ;
 ; string -> list of integers
 (define (get-personal-key)
-  (let loop ((in (string-split (file->listChars "ln_data/PersonalKey.locknut")))
-             (out '() ))
-    (if (empty? in)
-        out
-        (loop (cdr in)
-              (flatten (cons out (string->number (car in))))
-              )) ))
+  (map
+    string->number
+    (string-split (file->listChars "ln_data/PersonalKey.locknut"))))
+
 
 ;Take the inverse of the encryption key to make the decryption key
 ;Creates the inverse of the key-list for solving
 ;
 ; list of integers -> list of integers
 (define (create-solver key-list)
-  (let loop ((input key-list)
-             (output '()))
-    (if (empty? input)
-        output
-        (loop (cdr input)
-              (flatten (cons output (* -1 (car input)))))
-        )))
+  (map
+    (lambda (x) (* -1 x))
+    key-list))
+
 
 ;Make encryption key
 ;Generate a key-list (list of integers indicating shift amounts) from the given password
 ;
 ; string -> list of integers
 (define (password->key-list password)
-  (let loop ((input (string->list password))
-             (output '() ))
-    (if (empty? input)
-        output
-        (loop (cdr input)
-              (flatten (cons output (char->integer (car input)))))
-        )))
+  (map
+    char->integer
+    (string->list password)))
+
 
 ;Add the password-key-list to the default key-list, to make it unique to the given password
 ;
 ; list of integers -> list of integers
 (define (alter-key-list default-key-list pass-input-list)
-  (let loop ((default-list default-key-list)
-             (pass-list pass-input-list)
-             (output '() ))
-    (if (empty? default-list)
-        output
-        (begin
-          ;Reset the pass-list
-          (when (empty? pass-list)
-            (set! pass-list pass-input-list))
-          
-          (loop (cdr default-list)
-                (cdr pass-list) 
-                (flatten (cons output (+ (car default-list)
-                                         (car pass-list)))))
-          ))
-    ))
+  (if (< (length pass-input-list) (length default-key-list))
+    (alter-key-list
+      default-key-list
+      (append pass-input-list pass-input-list))
+    (map
+      (lambda (x y) (+ x y))
+      default-key-list
+      (take pass-input-list (length default-key-list)))))
 
 ; Checks for blank password, then generates the both the encryption and decryption
 ; keys. These aren't passed out. They're values are set to key-list and solver-list,
@@ -112,30 +95,30 @@
 ;
 ; string, bool, bool -> string
 (define (generate-key-and-solver password password-is-key?-value shareable?)
-  
+
   ;Determine which base-key to use. Default for shareable, Personal for not shareable
   (let ((base-key '()))
     (if (equal? #t shareable?)
-        ;Use the default, shareable
-        (set! base-key default-key)
+      ;Use the default, shareable
+      (set! base-key default-key)
 
-        ;Use personal key, non-shareable
-        (set! base-key (get-personal-key)))
-    
+      ;Use personal key, non-shareable
+      (set! base-key (get-personal-key)))
+
     ;Check if password is being used as the cipher key
     (if password-is-key?-value
 
-        ;Use password as key
-        (begin
-          (set! key-list (password->key-list password))
-          (set! solver-list (create-solver key-list)))
+      ;Use password as key
+      (begin
+        (set! key-list (password->key-list password))
+        (set! solver-list (create-solver key-list)))
 
-        ;Use default key, which includes the password
-        (begin
-          ;Modify the key-list with the password
-          (set! key-list (alter-key-list base-key (password->key-list password)))
-          (set! solver-list (create-solver key-list)))
-        )
+      ;Use default key, which includes the password
+      (begin
+        ;Modify the key-list with the password
+        (set! key-list (alter-key-list base-key (password->key-list password)))
+        (set! solver-list (create-solver key-list)))
+      )
     ;Return password in case it's been set to the default value
     password
     ))
@@ -147,7 +130,7 @@
 
 ;Moves the file into a string
 ;
-; string -> list of chars
+; string -> string
 (define (file->listChars filename)
   (letrec ((in (open-input-file filename))
            (out (port->string in)))
@@ -208,20 +191,17 @@
 ; string, string -> none
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
-  (let (;Get list of chars from source file
-        (chars-list 
-          (string->list (file->listChars input-file-name)))
+  (let (;Get string from source file, add password to front
+        (plain-text
+          (string-append
+            password
+            (file->listChars input-file-name)))
 
         ;Remove .txt and add .locknut extension
         (new-file-name 
           (string-append 
             (substring input-file-name 0 (- (string-length input-file-name) 4))
             ".locknut")))
-
-    ;Add the buffered password onto the beginning of the chars-list, which is the file
-    (set! chars-list
-      (append (string->list password)
-              chars-list))
 
     ;Remove the older version of the output file if necessary
     (when (file-exists? new-file-name)
@@ -230,7 +210,7 @@
     ;Encrypt and print
     (print-this
       (waterfall 
-        (list->string chars-list)
+        plain-text
         (list->string (map (lambda (x) (integer->char x)) key-list))
         #t)
       new-file-name)
@@ -303,7 +283,7 @@
 ; string, bool, bool -> string
 ;---------------------------------------------
 (define (decrypt password password-is-key?-value shareable?)
-  ;Save password in case the user wants to re-encrypt
+  ;Save password in case the user wants to re-encrypt or decrypt
   (set! unbuffed-password password)
 
   ;Buffer password, then generate the cipher key-list and solver-list
@@ -316,7 +296,7 @@
   ;Get file choice
   (let ((chosen-file (get-file)))
 
-    ;Valid file choice?
+    ;Check if file choice is valid
     (if (equal? chosen-file #f)
       "No file chosen"
       (begin
@@ -325,10 +305,11 @@
         ;Check if file is .locknut extension
         (if (equal? ".locknut"
                     (substring chosen-file (- (string-length chosen-file) 8)))
-          (begin
-            (if (decrypt-file chosen-file password)
-              "Finished decrypting!"
-              "Invalid password or incorrect base-key"))
+
+          ; Check if decryption was successful
+          (if (decrypt-file chosen-file password)
+            "Finished decrypting!"
+            "Invalid password or incorrect base-key")
 
           "File must be encrypted .locknut file")
         )) ))
@@ -453,8 +434,7 @@
                      ".locknut")))
              (when (file-exists? lockname)
                (delete-file lockname)))
-           ))
-       ))
+           )) ))
 
 ;Close
 ;
