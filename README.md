@@ -13,7 +13,7 @@ Encryption Technique
 Overview:
 =====================
 
-LockNut is a text file encryption program. It allows you to quickly and easily encrypt pre-existing files with a password and decrypt those files without any risk of your file being damaged or tampered with. 
+LockNut is a text file encryption program. It allows you to quickly and easily encrypt pre-existing files with a password and decrypt those files without any risk of your file being damaged or tampered with. Compared to other file security programs that protect your files with a password, only allowing access once the correct password has been given; LockNut uniquely encrypts your file with the password given. This means that even if your file is in the hands of another party, the only way it can be made read-able is with the password you used to encrypt it.
 
 
 Features:
