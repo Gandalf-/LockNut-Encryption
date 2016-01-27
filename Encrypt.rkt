@@ -60,9 +60,7 @@
 ;
 ; list of integers -> list of integers
 (define (create-solver key-list)
-  (map
-    (lambda (x) (* -1 x))
-    key-list))
+  (map (lambda (x) (* -1 x)) key-list))
 
 
 ;Make encryption key
@@ -70,23 +68,24 @@
 ;
 ; string -> list of integers
 (define (password->key-list password)
-  (map
-    char->integer
-    (string->list password)))
+  (map char->integer (string->list password)))
 
 
 ;Add the password-key-list to the default key-list, to make it unique to the given password
 ;
 ; list of integers -> list of integers
 (define (alter-key-list default-key-list pass-input-list)
-  (if (< (length pass-input-list) (length default-key-list))
+  (if (< (length pass-input-list)
+         (length default-key-list))
     (alter-key-list
       default-key-list
       (append pass-input-list pass-input-list))
+
     (map
       (lambda (x y) (+ x y))
       default-key-list
       (take pass-input-list (length default-key-list)))))
+
 
 ; Checks for blank password, then generates the both the encryption and decryption
 ; keys. These aren't passed out. They're values are set to key-list and solver-list,
@@ -117,11 +116,10 @@
       (begin
         ;Modify the key-list with the password
         (set! key-list (alter-key-list base-key (password->key-list password)))
-        (set! solver-list (create-solver key-list)))
-      )
+        (set! solver-list (create-solver key-list))) )
+
     ;Return password in case it's been set to the default value
-    password
-    ))
+    password ))
 
 
 ;----------------------------------------------------------------------
@@ -137,15 +135,15 @@
     (close-input-port in)
     out))
 
-;Creates a UTF8 .txt file
+
+;Creates a new UTF8 .txt file by copying a blank copy
 ;
 ; string -> none
 (define (init-file name)
   (when (file-exists? name)
     (delete-file name))
-
-  ;Copy UTF8
   (copy-file "ln_support.txt" name #f))
+
 
 ;Prints x to a file
 ; any, string -> none
@@ -170,6 +168,7 @@
     (string-append 
       password 
       (substring default-password 0 (- 50 (string-length password))) )))
+
 
 ;Buffers a string >60 characters
 ;
@@ -216,8 +215,7 @@
       new-file-name)
 
     ;Delete the input file
-    (delete-file input-file-name)
-    ))
+    (delete-file input-file-name) ))
 
 
 ;decrypt-file
@@ -269,8 +267,7 @@
           (delete-file "ln_data/tmp.locknut"))
 
         ;Invalid password
-        #f))
-    ))
+        #f)) ))
 
 
 ;CALLERS
@@ -311,8 +308,8 @@
             "Finished decrypting!"
             "Invalid password or incorrect base-key")
 
-          "File must be encrypted .locknut file")
-        )) ))
+          "File must be encrypted .locknut file") )) ))
+
 
 ;CREATE NEW ENCRYPTED FILE
 ;CALLS ENCRYPT
@@ -353,8 +350,7 @@
 (define editor-info-panel
   (instantiate
     vertical-panel% (editor-frame)
-    (stretchable-height #f)
-    ))
+    (stretchable-height #f) ))
 
 ; Displays the filename of the decrypted file
 ;
@@ -364,22 +360,18 @@
        (label "Filename: ")
        (parent editor-info-panel)
        (stretchable-width #t)
-       (auto-resize #t)
-       ))
+       (auto-resize #t) ))
 
 (define editor-canvas
-  (new editor-canvas%
-       (parent editor-frame)))
+  (new editor-canvas% (parent editor-frame)))
 
-(define text-editor
-  (new text%))
-
+(define text-editor (new text%))
 (define mb (new menu-bar% [parent editor-frame]))
 (define m-edit (new menu% [label "Edit"] [parent mb]))
 (define m-font (new menu% [label "Font"] [parent mb]))
+
 (append-editor-operation-menu-items m-edit #f)
 (append-editor-font-menu-items m-font)
-
 (send editor-canvas set-editor text-editor)
 
 ; Panel for editor buttons
@@ -388,8 +380,7 @@
 (define editor-button-panel
   (instantiate 
     horizontal-panel% (editor-frame)
-    (stretchable-height #f)
-    ))
+    (stretchable-height #f) ))
 
 ; Save and reencrypt the changes to the file
 ;
@@ -408,9 +399,7 @@
            ;Encrypt: Print .locknut, delete .txt
            (encrypt-file curr-file-name (buff-password unbuffed-password))
            (send editor-frame set-status-text 
-                 "Encryption finished. Original deleted.")
-           ))
-       ))
+                 "Encryption finished. Original deleted.") )) ))
 
 ;Save to plain text
 ;
@@ -433,8 +422,7 @@
                      (substring curr-file-name 0 (- (string-length curr-file-name) 4))
                      ".locknut")))
              (when (file-exists? lockname)
-               (delete-file lockname)))
-           )) ))
+               (delete-file lockname))) )) ))
 
 ;Close
 ;
