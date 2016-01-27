@@ -10,7 +10,6 @@
 
 (require racket/gui)
 (require racket/port)
-;(require "Encrypt-Algorithm.rkt")
 (require "Waterfall.rkt")
 
 ;Provisions to LockNut.rkt
@@ -332,106 +331,105 @@
 ;----------------------------------------------
 ; BUILT IN TEXT EDITOR
 ;----------------------------------------------
+  ; Top level frame for editor
+  ;
+  ; gui frame
+  (define editor-frame
+    (new frame%
+         (label "LockNut Editor")
+         (width 500)
+         (height 400)))
 
-; Top level frame for editor
-;
-; gui frame
-(define editor-frame
-  (new frame%
-       (label "LockNut Editor")
-       (width 500)
-       (height 400)))
+  (send editor-frame create-status-line)
 
-(send editor-frame create-status-line)
+  ; Panel for editor text fields
+  ;
+  ; gui v pannel
+  (define editor-info-panel
+    (instantiate
+      vertical-panel% (editor-frame)
+      (stretchable-height #f) ))
 
-; Panel for editor text fields
-;
-; gui v pannel
-(define editor-info-panel
-  (instantiate
-    vertical-panel% (editor-frame)
-    (stretchable-height #f) ))
+  ; Displays the filename of the decrypted file
+  ;
+  ; gui message
+  (define file-info
+    (new message%
+         (label "Filename: ")
+         (parent editor-info-panel)
+         (stretchable-width #t)
+         (auto-resize #t) ))
 
-; Displays the filename of the decrypted file
-;
-; gui message
-(define file-info
-  (new message%
-       (label "Filename: ")
-       (parent editor-info-panel)
-       (stretchable-width #t)
-       (auto-resize #t) ))
+  (define editor-canvas
+    (new editor-canvas% (parent editor-frame)))
 
-(define editor-canvas
-  (new editor-canvas% (parent editor-frame)))
+  (define text-editor (new text%))
+  (define mb (new menu-bar% [parent editor-frame]))
+  (define m-edit (new menu% [label "Edit"] [parent mb]))
+  (define m-font (new menu% [label "Font"] [parent mb]))
 
-(define text-editor (new text%))
-(define mb (new menu-bar% [parent editor-frame]))
-(define m-edit (new menu% [label "Edit"] [parent mb]))
-(define m-font (new menu% [label "Font"] [parent mb]))
+  (append-editor-operation-menu-items m-edit #f)
+  (append-editor-font-menu-items m-font)
+  (send editor-canvas set-editor text-editor)
 
-(append-editor-operation-menu-items m-edit #f)
-(append-editor-font-menu-items m-font)
-(send editor-canvas set-editor text-editor)
+  ; Panel for editor buttons
+  ; 
+  ; gui h panel
+  (define editor-button-panel
+    (instantiate 
+      horizontal-panel% (editor-frame)
+      (stretchable-height #f) ))
 
-; Panel for editor buttons
-; 
-; gui h panel
-(define editor-button-panel
-  (instantiate 
-    horizontal-panel% (editor-frame)
-    (stretchable-height #f) ))
+  ; Save and reencrypt the changes to the file
+  ;
+  ; gui button
+  (define editor-reencrypt
+    (new button%
+         (label "Encrypt changes")
+         (parent editor-button-panel)
+         (callback 
+           (lambda (b e)
+             (send editor-frame set-status-text "Encrypting...")
 
-; Save and reencrypt the changes to the file
-;
-; gui button
-(define editor-reencrypt
-  (new button%
-       (label "Encrypt changes")
-       (parent editor-button-panel)
-       (callback 
-         (lambda (b e)
-           (send editor-frame set-status-text "Encrypting...")
+             ;Save file as .txt
+             (send text-editor save-file curr-file-name 'text)
 
-           ;Save file as .txt
-           (send text-editor save-file curr-file-name 'text)
+             ;Encrypt: Print .locknut, delete .txt
+             (encrypt-file curr-file-name (buff-password unbuffed-password))
+             (send editor-frame set-status-text 
+                   "Encryption finished. Original deleted.") )) ))
 
-           ;Encrypt: Print .locknut, delete .txt
-           (encrypt-file curr-file-name (buff-password unbuffed-password))
-           (send editor-frame set-status-text 
-                 "Encryption finished. Original deleted.") )) ))
+  ;Save to plain text
+  ;
+  ; gui button
+  (define editor-decrypt
+    (new button%
+         (label "Save to plaintext")
+         (parent editor-button-panel)
+         (callback 
+           (lambda (b e)
+             (send editor-frame set-status-text 
+                   "File saved. Encrypted version deleted.")
 
-;Save to plain text
-;
-; gui button
-(define editor-decrypt
-  (new button%
-       (label "Save to plaintext")
-       (parent editor-button-panel)
-       (callback 
-         (lambda (b e)
-           (send editor-frame set-status-text 
-                 "File saved. Encrypted version deleted.")
+             ;Save to .txt
+             (send text-editor save-file curr-file-name 'text)
 
-           ;Save to .txt
-           (send text-editor save-file curr-file-name 'text)
+             ;Delete the .locknut
+             (let ((lockname 
+                     (string-append
+                       (substring curr-file-name 0 (- (string-length curr-file-name) 4))
+                       ".locknut")))
+               (when (file-exists? lockname)
+                 (delete-file lockname))) )) ))
 
-           ;Delete the .locknut
-           (let ((lockname 
-                   (string-append
-                     (substring curr-file-name 0 (- (string-length curr-file-name) 4))
-                     ".locknut")))
-             (when (file-exists? lockname)
-               (delete-file lockname))) )) ))
-
-;Close
-;
-; gui button
-(define editor-close
-  (new button%
-       (label "Close")
-       (parent editor-button-panel)
-       (callback 
-         (lambda (b e)
-           ;(send t save-file file-name 'text)
-           (send editor-frame show #f)))))
+  ;Close
+  ;
+  ; gui button
+  (define editor-close
+    (new button%
+         (label "Close")
+         (parent editor-button-panel)
+         (callback 
+           (lambda (b e)
+             ;(send t save-file file-name 'text)
+             (send editor-frame show #f)))))
