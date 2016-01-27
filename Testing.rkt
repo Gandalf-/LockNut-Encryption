@@ -1,90 +1,65 @@
 #lang racket
 
-(require racket/gui)
-
-(define (read-this file)
-  (let ((out '() ))
-    (for ([c (in-port read-char (open-input-file file))])
-      (set! out (flatten (cons out c))))
-    out))
-
-(define (file->listChars filename)
-  (letrec ((in (open-input-file filename))
-           (out (port->string in)))
-    (close-input-port in)
-    out))
-
-;;Moves the file into a string
-;(define (file->listChars filename)
-;  (port->string (open-input-file filename)))
-
-;Creates a UTF8 .txt file
-(define (init-file name)
-  (when (file-exists? name)
-    (delete-file name))
-  ;Copy UTF8
-  (copy-file "Support/UTF8.txt" name #f))
-
-;Prints x to a file
-(define (print-this x name)
-  (call-with-output-file* name #:exists 'replace
-                          (lambda (output-port)
-                            (display x output-port))))
-
-;(init-file "ABC.txt")
-;(print-this "“Papa? What is it?” λ, α, γ ..." "ABC.txt")
-
-;(file->listChars "TurkeyFood.txt")
-;(list->string (read-this "Out.txt"))
-
-
-(define f
-  (new frame%
-       (label "Simple Edit")
-       (width 800)
-       (height 600)))
-
-(define c
-  (new editor-canvas%
-       (parent f)))
-
-(define b
-  (new button%
-       (label "Done")
-       (parent f)
-       (callback (lambda (b e)
-                   (send t save-file "Out.txt" 'text)
-                   (send f show #f)))))
-
-(define t
-  (new text%))
-
-(define mb (new menu-bar% [parent f]))
-(define m-edit (new menu% [label "Edit"] [parent mb]))
-(define m-font (new menu% [label "Font"] [parent mb]))
-(append-editor-operation-menu-items m-edit #f)
-(append-editor-font-menu-items m-font)
-
-
-(send c set-editor t)
-;(send f show #t)
-;(send t load-file "Hebrew.txt")
-
-
-;Buffers a string >50 characters
-(define (buff-string input)
-  (let ((str-len (string-length input)))
-    (if (>= str-len 30)
-        (string-append "..." (substring input (- str-len 30) str-len))
-        input)
+(define (alter-key-list default-key-list pass-input-list)
+  (let loop ((default-list default-key-list)
+             (pass-list pass-input-list)
+             (output '() ))
+    (if (empty? default-list)
+        output
+        (begin
+          ;Reset the pass-list
+          (when (empty? pass-list)
+            (set! pass-list pass-input-list))
+          
+          (loop (cdr default-list)
+                (cdr pass-list) 
+                (flatten (cons output (+ (car default-list)
+                                         (car pass-list)))))
+          ))
     ))
 
-(define in "C:\\Users\\Weyandawik\\Documents\\My Documents\\CompSci\\Scheme")
+(define (func a b)
+  (if (< (length b) (length a))
+      (func a (append b b))
+      (map
+       (lambda (x y) (+ x y))
+       a
+       (take b (length a)))))
 
-(buff-string in)
- 
+(define A '(1 2 3 4 5 6 7 6 5 4 3 2 1 2 3 4 4))
+(define B '(7 6 5 4 3 2 1))
 
+(alter-key-list A B)
+(func A B)
 
+(build-list 250 (lambda (x) (random 100)))
 
+(list->string
+ (flatten
+  (map
+   string->list
+   '("wow" "lol" "amazing" "golly"))))
 
+(foldr string-append "" '("wow" "lol" "amazing" "golly"))
+
+; list of chars to strings of len length
+(define (split-list input len)
+  (let loop ((out '() )
+             (curr input))
+    (if (> len (length curr))
+
+        ;Remove potential empty string in results
+        (let ((res (reverse (cons (list->string curr)
+                                  out))))
+          (if (string=? (last res) "")
+              (take res (- (length res) 1))
+              res))
+
+        ;Add len elements to output
+        (loop (cons (list->string (take curr len))
+                    out)
+              (list-tail curr len)) )))
+
+(define (splitter input len)
+  (let loop ((
 

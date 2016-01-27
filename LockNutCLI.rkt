@@ -13,7 +13,7 @@
 ; -V password-is-key
 ; -h help
 ;--------------------------------------------
-(require "Encrypt.rkt")
+(require "EncryptCLI.rkt")
 
 ; Commandline arguements
 (define pass "")
@@ -55,12 +55,12 @@
 ;Startup sequence. Check for PersonalKey file, otherwise
 ; run first time setup: Generate personal key, offer readme
 (define (startup)
-  (unless (file-exists? "Data/PersonalKey.locknut")
+  (unless (file-exists? "ln_data/PersonalKey.locknut")
     ;Create personal key
     (displayln "Running first-time initialization sequence...")
     (unless (directory-exists? "Data")
       (make-directory "Data"))
-    (print-this (generate-personal-key) "Data/PersonalKey.locknut")
+    (print-this (generate-personal-key) "ln_data/PersonalKey.locknut")
     (sleep 1.5)
     (displayln "Personal encryption key generated. Ready.") ))
 
