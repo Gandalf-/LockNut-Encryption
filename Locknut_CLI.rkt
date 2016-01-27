@@ -13,7 +13,7 @@
 ; -V password-is-key
 ; -h help
 ;--------------------------------------------
-(require "EncryptCLI.rkt")
+(require "Encrypt_CLI.rkt")
 
 ; Commandline arguements
 (define pass "")

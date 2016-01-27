@@ -1,0 +1,4 @@
+List of Issues and Errors
+
+- What happens when target file is read-only?
+- Check if file exists before trying to do anything with it

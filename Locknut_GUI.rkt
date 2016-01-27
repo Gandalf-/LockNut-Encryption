@@ -9,7 +9,7 @@
 ;--------------------------------------------
 
 (require racket/gui)
-(require "Encrypt.rkt")
+(require "Encrypt_GUI.rkt")
 
 (define my-font (make-object font% 10 'modern))
 (define help-mode #f)
