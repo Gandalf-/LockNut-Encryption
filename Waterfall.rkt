@@ -97,7 +97,7 @@
   ;Prepare input: hash password, in -> list
   (let ((key-list (string->integer-list
                     (sha1 (open-input-bytes
-                            (string->bytes/locale key)))))
+                            (string->bytes/utf-8 key)))))
         (in (string->list input)))
 
     ;Get length for spliting, and split the input

@@ -6,6 +6,8 @@ pass2="1234567890"
 
 # test script for CLI version on Linux
 echo Starting tests
+cp backup_samples/sample1.txt .
+cp backup_samples/sample2.txt .
 cd ..
 
 # encrypt file, PASS
@@ -16,7 +18,7 @@ $run -e -p $pass1 tests/sample1.txt
 # encrypt file with .locknut extension, should FAIL
 echo
 echo encrypt file with .locknut extension, should FAIL
-$run -e -p $pass1 tests/sample2.txt 
+$run -e -p $pass1 tests/sample2.txt
 
 # decrypt file with incorrect password, should FAIL
 echo

@@ -1,2 +1,2 @@
 #!/bin/bash
-racket LockNutCLI.rkt $@
+racket Locknut_CLI.rkt $@
