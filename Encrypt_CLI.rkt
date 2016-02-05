@@ -134,7 +134,7 @@
   (when (file-exists? name)
     (delete-file name))
   ;Copy UTF8
-  (copy-file "Support/UTF8.txt" name #f))
+  (copy-file "ln_support/UTF8.txt" name #f))
 
 ;Prints x to a file
 (define (print-this x name)
@@ -194,7 +194,8 @@
       new-file-name)
 
     ;Delete the input file
-    (delete-file input-file-name) ))
+    (delete-file input-file-name) )
+  "Encryption complete")
 
 
 ;FILE DECRYPTION
@@ -278,5 +279,9 @@
                    (buff-password password)
                    password-is-key?-value
                    shareable?))
-  ;Encrypt file
-  (encrypt-file given-file-name password))
+  (if (equal? ".locknut" (substring given-file-name (- (string-length given-file-name) 8)))
+    ; fail
+    "Cannot re-encrypt .locknut files"
+
+    ; encrypt file
+    (encrypt-file given-file-name password)))
