@@ -54,7 +54,7 @@
 
     ;Delete the input file
     (delete-file input-file-name) )
-  "Encryption complete")
+  "Done")
 
 
 ;FILE DECRYPTION
@@ -120,15 +120,15 @@
   ;Get file choice
   (let ((chosen-file file-name))
     (if (not (file-exists? chosen-file))
-      "File does not exist"
+      "Error: file does not exist"
 
       ;Check if file is .locknut extension
       (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
         (if (decrypt-file chosen-file password)
-          "Decryption complete"
-          "Invalid password or incorrect base-key")
+          "Done"
+          "Error: invalid password or incorrect base-key")
 
-        "File must be encrypted .locknut file") )))
+        "Error: file must be encrypted .locknut file") )))
 
 
 ;CREATE NEW ENCRYPTED FILE
@@ -141,10 +141,13 @@
                    (buff-password password)
                    password-is-key?-value
                    shareable?))
-  (if (equal? ".locknut"
-              (substring given-file-name (- (string-length given-file-name) 8)))
-    ; fail
-    "Cannot re-encrypt .locknut files"
+  (if (not (file-exists? given-file-name))
+    "Error: file does not exist"
 
-    ; encrypt file
-    (encrypt-file given-file-name password)))
+    (if (equal? ".locknut"
+                (substring given-file-name (- (string-length given-file-name) 8)))
+      ; fail
+      "Error: cannot re-encrypt .locknut files"
+
+      ; encrypt file
+      (encrypt-file given-file-name password))))
