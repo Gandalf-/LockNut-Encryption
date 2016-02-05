@@ -6,7 +6,6 @@
 
 ;CLI Version
 ; -p password
-; -f file
 ; -e encrypt
 ; -d decrypt
 ; -s shareable
@@ -15,7 +14,7 @@
 ;--------------------------------------------
 (require "Encrypt_CLI.rkt")
 
-; Commandline arguements
+; Commandline arguments
 (define pass "")
 (define file "")
 (define encrypt? #f)

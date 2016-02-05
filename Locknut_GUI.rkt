@@ -220,9 +220,10 @@
        (parent create-file-panel)
        (callback 
          (lambda (b e)
-           (let ((file-name (string-append 
-                              (send create-file-filename-field get-value) 
-                              ".txt"))
+           (let ((file-name 
+                   (string-append 
+                     (send create-file-filename-field get-value) 
+                     ".txt"))
                  (password (send create-file-passcode-field get-value))
                  (pass-key? (send password-is-key-checkbox get-value))
                  (shareable? (send shareable-file-checkbox get-value)))
