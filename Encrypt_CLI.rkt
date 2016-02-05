@@ -16,6 +16,7 @@
 (provide decrypt)
 (provide create-file)
 (provide print-this)
+(provide Encrypt_CLI-test)
 
 
 ;Globals
@@ -151,3 +152,9 @@
 
       ; encrypt file
       (encrypt-file given-file-name password))))
+
+
+; TESTS
+; ==========================
+(define (Encrypt_CLI-test)
+  (displayln "Encrypt-CLI tests complete"))

@@ -13,6 +13,9 @@
 (provide key-list)
 (provide generate-key-and-solver)
 (provide buff-password)
+(provide buff-string)
+
+(provide Encrypt_Core-test)
 
 ;----------------------------------------------------------------------
 ; Waterfall required 
@@ -113,7 +116,6 @@
 
 ;FILE IO
 ;----------------------------------------------------------------------
-
 ;Moves the file into a string
 (define (file->listChars filename)
   (letrec ((in (open-input-file filename))
@@ -141,10 +143,12 @@
 (define (buff-password password)
   (if (>= (string-length password) 50)
     (substring password 0 50)
-    (string-append password 
-                   (substring default-password 
-                              0
-                              (- 50 (string-length password)))) ))
+    (string-append 
+      password 
+      (substring
+        default-password 
+        0
+        (- 50 (string-length password)))) ))
 
 ;Buffers a string >60 characters
 (define (buff-string input)
@@ -152,3 +156,19 @@
     (if (>= str-len 60)
       (string-append "..." (substring input (- str-len 60) str-len))
       input) ))
+
+
+;TEST
+;====================================
+(define (Encrypt_Core-test)
+  ;buff-password
+  (define long-password "123456789012345678901234567890123456789012345678901234567890")
+  (define short-password "1234567890")
+
+  (unless (= 50 (string-length (buff-password long-password)))
+    (displayln "Error: buff-password"))
+
+  (unless (= 50 (string-length (buff-password short-password)))
+    (displayln "Error: buff-password"))
+
+  (displayln "Encrypt_Core tests complete"))

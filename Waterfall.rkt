@@ -2,6 +2,7 @@
 
 (require openssl/sha1)
 (provide waterfall)
+(provide Waterfall-test)
 
 ;HELPERS
 ;====================================
@@ -112,3 +113,8 @@
         ;Decrypt
         (list-strings->string
           (waterfall-decrypt lists (inverse-list key-list)))) )))
+
+;TEST
+;====================================
+(define (Waterfall-test)
+  (displayln "Waterfall tests complete"))

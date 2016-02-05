@@ -17,6 +17,7 @@
 (provide decrypt)
 (provide create-file)
 (provide print-this)
+(provide Encrypt_GUI-test)
 
 ;Globals
 (define curr-file-name "")
@@ -277,3 +278,9 @@
            (lambda (b e)
              ;(send t save-file file-name 'text)
              (send editor-frame show #f)))))
+
+
+; TESTS
+; ==========================
+(define (Encrypt_GUI-test)
+  (displayln "Encrypt-GUI tests complete"))
