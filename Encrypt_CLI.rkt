@@ -35,11 +35,8 @@
             password
             (file->listChars input-file-name)))
 
-        ;Remove .txt and add .locknut extension
-        (new-file-name 
-          (string-append 
-            (substring input-file-name 0 (- (string-length input-file-name) 4))
-            ".locknut")))
+        ; Add .locknut extension
+        (new-file-name (string-append input-file-name ".locknut")))
 
     ;Remove the older version of the output file if necessary
     (when (file-exists? new-file-name)
@@ -71,11 +68,9 @@
           (string->list 
             (file->listChars input-file-name)))
 
-        ;Remove .locknut extension and add .txt
+        ;Remove .locknut extension, length checked by create-file and decrypt
         (new-file-name 
-          (string-append
-            (substring input-file-name 0 (- (string-length input-file-name) 8))
-            ".txt")))
+            (substring input-file-name 0 (- (string-length input-file-name) 8))))
 
     ;Remove the older version of output file, if necessary
     (when (file-exists? new-file-name)
@@ -124,7 +119,10 @@
       "Error: file does not exist"
 
       ;Check if file is .locknut extension
-      (if (equal? ".locknut" (substring chosen-file (- (string-length chosen-file) 8)))
+      (if (and
+            (> (string-length chosen-file) 8)
+            (equal? ".locknut" 
+                    (substring chosen-file (- (string-length chosen-file) 8))))
         (if (decrypt-file chosen-file password)
           "Done"
           "Error: invalid password or incorrect base-key")
@@ -145,8 +143,10 @@
   (if (not (file-exists? given-file-name))
     "Error: file does not exist"
 
-    (if (equal? ".locknut"
-                (substring given-file-name (- (string-length given-file-name) 8)))
+    (if (and
+          (> (string-length given-file-name) 8)
+          (equal? ".locknut"
+                (substring given-file-name (- (string-length given-file-name) 8))))
       ; fail
       "Error: cannot re-encrypt .locknut files"
 
