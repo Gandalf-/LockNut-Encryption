@@ -7,26 +7,33 @@
 ;HELPERS
 ;====================================
 ;Takes the inverse of the list
-;[ list of any -> list of any ]
+;
+; list of any -> list of any
 (define (inverse-list key-list)
   (map
     (lambda (x) (* -1 x))
     key-list))
 
+
 ;Replace password->key-list
-;[ string -> list of integer ]
+;
+; string -> list of integer
 (define (string->integer-list in)
   (map
     char->integer
     (string->list in)))
 
+
 ;Takes a list of strings and appends them together
-;[ list of string -> string ]
+;
+; list of string -> string
 (define (list-strings->string in)
   (foldr string-append "" in))
 
+
 ;Split the input list of characters into strings of len length
-;[ list of chars -> list of strings ]
+;
+; list of chars -> list of strings
 (define (split-list input len)
   (let loop ((out '() )
              (curr input))
@@ -44,10 +51,12 @@
                   out)
             (list-tail curr len)) )))
 
+
 ;ENCRYPTION FUNCS
 ;====================================
 ;Encrypts input with the key. Simple Viegenere Cipher
-;[ string, list of integer -> string ]
+;
+; string, list of integer -> string 
 (define (cipher input key)
   (let loop ((in (string->integer-list input))
              (k key))
@@ -61,13 +70,16 @@
       (list->string
         (map
           (lambda (x y)
-            (if (< 0 (+ x y))
+            (if (and ((integer-in 0 #x10FFFF) (+ x y))
+                     (not ((integer-in #xD800 #xDFFF) (+ x y))))
               (integer->char (+ x y))
-              (integer->char (+ x 0))))
+              (integer->char x)))
           in (take k (length in))) ))))
 
+
 ;Encrypts a list of characters broken into sublists
-;[ list of strings, list of integers -> list of strings ]
+;
+; list of strings, list of integers -> list of strings
 (define (waterfall-encrypt input key)
   (let loop ((out '() )
              (curr input))
@@ -83,8 +95,10 @@
                   out)
             (cdr curr)) )))
 
+
 ;Decrypts a waterfall encrypted list of characters
-;[ list of strings, list of integers -> list of strings ]
+;
+; list of strings, list of integers -> list of strings 
 (define (waterfall-decrypt input-list key-list)
   ; decrypt the first element with the key-list
   (let loop ((out (list (cipher 
@@ -102,10 +116,12 @@
                   out)
             (cdr curr)) )))
 
+
 ;MAIN
 ;====================================
 ;Encrypts or decrypts strings
-;[ list of strings, string, bool -> string ]
+;
+; list of strings, string, bool -> string 
 (define (waterfall input-string key-string encrypt-mode)
   ;Prepare input: hash password, in -> list
   (let ((key-list (string->integer-list
@@ -125,6 +141,7 @@
         ;Decrypt
         (list-strings->string
           (waterfall-decrypt lists (inverse-list key-list)))) )))
+
 
 ;TEST
 ;====================================
@@ -148,28 +165,26 @@
   (unless (equal? '("AB" "CD")
                   (split-list '(#\A #\B #\C #\D) 2))
     (displayln "error: split-list"))
+  (displayln (cipher "AAAAAA" '(#x10FFFF)))
 
   ; cipher
   (unless (and (equal? "BCDEFGH" (cipher "ABCDEFG" '(1)))
                (equal? "BCDEFGH" (cipher "ABCDEFG" '(1 1 1 1 1 1 1 1 1)))
                (equal? "AAAAAAA" (cipher "AAAAAAA" '(-5000)))
+               (equal? "AAAAAAA" (cipher "AAAAAAA" '(#x10FFFF)))
                )
     (displayln "error: cipher"))
 
-  ; waterfall-encrypt
+  ; waterfall
   (letrec 
-    ((plain '("AAA" "BBB" "CCC"))
-     (cipher (waterfall-encrypt plain '(1 2 3)))
-     (cplain (waterfall-decrypt cipher '(1 2 3))))
+    ((plain "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+     (cipher (waterfall plain "12345" #t))
+     (cplain (waterfall cipher "12345" #f)))
 
     (unless (equal? plain cplain)
       (displayln plain)
       (displayln cipher)
       (displayln cplain)
-      (displayln "error: waterfall-encrypt waterfall-decrypt")))
-
-  ; waterfall-decrypt
-
-  ; waterfall
+      (displayln "error: waterfall")))
 
   (displayln "Waterfall tests complete"))

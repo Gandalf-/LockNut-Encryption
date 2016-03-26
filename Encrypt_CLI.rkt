@@ -1,5 +1,6 @@
 #lang racket
 
+;----------------------------------------------------------------------
 ;Encrypt
 ;LockNut Encryption Program
 ;Austin Voecks, Summer 2014
@@ -27,6 +28,8 @@
 ;FILE ENCRYPTION
 ; CALLED BY CREATE-FILE, decrypt
 ; Takes a file as input and prints the encrypted version of the file to a .locknut file
+;
+; string, string -> string
 ;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
   (let (;Get string from source file, add password to front
@@ -61,6 +64,8 @@
 ; file to a text file.
 ; If glancing, open the file in notepad and delete when the user is finished.
 ; Otherwise, rename the decrypted text file to the original name of the input
+;
+; string, string -> string || bool
 ;--------------------------------------------------------------------------------
 (define (decrypt-file input-file-name password)
   ;Get the char-list from the encryped file
@@ -104,6 +109,8 @@
 ;decrypt
 ; CALLS DECRYPT-FILE
 ; Checks the filename and passes info back up
+;
+; string, string, bool, bool -> string
 ;---------------------------------------------
 (define (decrypt file-name password password-is-key?-value shareable?)
   ;Save password in case the user wants to re-encrypt
@@ -132,6 +139,8 @@
 
 ;CREATE NEW ENCRYPTED FILE
 ;CALLS ENCRYPT
+;
+;string, string, bool, bool -> string
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
 

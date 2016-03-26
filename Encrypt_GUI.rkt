@@ -66,7 +66,7 @@
 ; If glancing, open the file in notepad and delete when the user is finished.
 ; Otherwise, rename the decrypted text file to the original name of the input
 ;
-; [ string, string -> none ]
+; string, string -> none
 ;--------------------------------------------------------------------------------
 (define (decrypt-file input-file-name password)
 
@@ -115,7 +115,8 @@
 ;decrypt
 ; CALLS DECRYPT-FILE
 ; Checks the filename and passes info back up
-; [ string, bool, bool -> string ]
+;
+; string, bool, bool -> string
 ;---------------------------------------------
 (define (decrypt password password-is-key?-value shareable?)
   ;Save password in case the user wants to re-encrypt or decrypt
@@ -153,7 +154,8 @@
 
 ;CREATE NEW ENCRYPTED FILE
 ;CALLS ENCRYPT
-; [ string, string, bool, bool -> none ]
+;
+; string, string, bool, bool -> none
 ;-----------------------------------------------
 (define (create-file given-file-name password password-is-key?-value shareable?)
 
@@ -172,8 +174,6 @@
 ; BUILT IN TEXT EDITOR
 ;----------------------------------------------
 ; Top level frame for editor
-;
-; gui frame
 (define editor-frame
   (new frame%
        (label "LockNut Editor")
@@ -183,16 +183,12 @@
 (send editor-frame create-status-line)
 
 ; Panel for editor text fields
-;
-; gui v pannel
 (define editor-info-panel
   (instantiate
     vertical-panel% (editor-frame)
     (stretchable-height #f) ))
 
 ; Displays the filename of the decrypted file
-;
-; gui message
 (define file-info
   (new message%
        (label "Filename: ")
@@ -213,16 +209,12 @@
 (send editor-canvas set-editor text-editor)
 
 ; Panel for editor buttons
-; 
-; gui h panel
 (define editor-button-panel
   (instantiate 
     horizontal-panel% (editor-frame)
     (stretchable-height #f) ))
 
 ; Save and reencrypt the changes to the file
-;
-; gui button
 (define editor-reencrypt
   (new button%
        (label "Encrypt changes")
@@ -240,8 +232,6 @@
                  "Encryption finished. Original deleted.") )) ))
 
 ;Save to plain text
-;
-; gui button
 (define editor-decrypt
   (new button%
        (label "Save to plaintext")
@@ -263,8 +253,6 @@
                (delete-file lockname))) )) ))
 
 ;Close
-;
-; gui button
 (define editor-close
   (new button%
        (label "Close")

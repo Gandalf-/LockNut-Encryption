@@ -33,13 +33,16 @@
 (define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62 
             76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
 
+
 ; Default key, 250 (* 50 5), random integers [0-100]
 (define default-key (append A B C D E))
 (define default-password "6AQO*fvr*RQ7Uv!mCnPc8vxKdia45a$uh'7B5K06Rcj863RMyg")
 
+
 ; Both uniquely assigned during encrypt/decrypt
 (define key-list '() )
 (define solver-list '() )
+
 
 ;Gets the personal key from file
 ;
@@ -48,6 +51,7 @@
   (map
     string->number
     (string-split (file->listChars "ln_data/PersonalKey.locknut"))))
+
 
 ;Make encryption key
 ;Generate a key-list (list of integers indicating shift amounts) from the given password
@@ -72,12 +76,14 @@
       default-key-list
       (take pass-input-list (length default-key-list)))))
 
+
 ;Take the inverse of the encryption key to make the decryption key
 ;Creates the inverse of the key-list for solving
 ;
 ; list of integers -> list of integers
 (define (create-solver key-list)
   (map (lambda (x) (* -1 x)) key-list))
+
 
 ; Checks for blank password, then generates the both the encryption and decryption
 ; keys. These aren't passed out. They're values are set to key-list and solver-list,
@@ -117,29 +123,39 @@
 ;FILE IO
 ;----------------------------------------------------------------------
 ;Moves the file into a string
+;
+;string -> none
 (define (file->listChars filename)
   (letrec ((in (open-input-file filename))
            (out (port->string in)))
     (close-input-port in)
     out))
 
+
 ;Creates a UTF8 .txt file
+;
+;string -> none
 (define (init-file name)
   (when (file-exists? name)
     (delete-file name))
   ;Copy UTF8
   (copy-file "ln_support/UTF8.txt" name #f))
 
+
 ;Prints x to a file
+;string -> string -> none
 (define (print-this x name)
   (call-with-output-file*
     name #:exists 'replace
     (lambda (output-port)
       (display x output-port))))
 
+
 ;HELPERS
 ;------------
 ;Buffers the password to 50 characters using the default password
+;
+;string -> string
 (define (buff-password password)
   (if (>= (string-length password) 50)
     (substring password 0 50)
@@ -150,11 +166,14 @@
         0
         (- 50 (string-length password)))) ))
 
+
 ;Buffers a string >60 characters
+;
+;string -> string
 (define (buff-string input)
   (let ((str-len (string-length input)))
     (if (>= str-len 60)
-      (string-append "..." (substring input (- str-len 60) str-len))
+      (string-append "..." (substring input (- str-len 57) str-len))
       input) ))
 
 
@@ -170,5 +189,12 @@
 
   (unless (= 50 (string-length (buff-password short-password)))
     (displayln "Error: buff-password"))
+
+  ;buff-string
+  (unless (= 60 (string-length (buff-string long-password)))
+    (displayln "Error: buff-string"))
+
+  (unless (= 60 (string-length (buff-string short-password)))
+    (displayln "Error: buff-string"))
 
   (displayln "Encrypt_Core tests complete"))

@@ -4,6 +4,7 @@
 ;LockNut Encryption Program
 ;Austin Voecks, Spring 2015
 
+;--------------------------------------------
 ;CLI Version
 ; -p password
 ; -e encrypt
@@ -22,6 +23,7 @@
 (define share? #f)
 (define pass-is-key? #f)
 (define help? #f)
+
 
 (define locknut
   (command-line
@@ -42,7 +44,10 @@
     #:args (filename)
     (set! file filename)))
 
+
 ;Creates a string of 250 random integers [0-200]
+;
+; none -> string
 (define (generate-personal-key)
   (let loop ((out "" )
              (i 0))
@@ -53,6 +58,8 @@
 
 ;Startup sequence. Check for PersonalKey file, otherwise
 ; run first time setup: Generate personal key, offer readme
+;
+; none -> none
 (define (startup)
   (unless (file-exists? "ln_data/PersonalKey.locknut")
     ;Create personal key
@@ -63,6 +70,7 @@
     (sleep 1.5)
     (displayln "Personal encryption key generated. Ready.") ))
 
+; run
 (startup)
 
 ;Decrypt
