@@ -11,7 +11,7 @@
 (require racket/gui)
 (require racket/port)
 (require "Encrypt_Core.rkt")
-(require "Waterfall.rkt")
+(require "waterfall/Waterfall.rkt")
 
 ;Provisions to LockNut.rkt
 (provide decrypt)

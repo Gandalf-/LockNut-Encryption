@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../Encrypt_Core.rkt" "../Waterfall.rkt" "../Encrypt_CLI.rkt")
+(require "../Encrypt_Core.rkt" "../waterfall/Waterfall.rkt" "../Encrypt_CLI.rkt")
 
 (Encrypt_Core-test)
 (Waterfall-test)
