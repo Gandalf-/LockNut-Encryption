@@ -117,7 +117,7 @@
             (cdr curr)) )))
 
 
-;MAIN
+;WATERFALL
 ;====================================
 ;Encrypts or decrypts strings
 ;

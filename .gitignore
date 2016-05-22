@@ -9,3 +9,4 @@ Testing.rkt
 *.dep
 *.zo
 ln_data
+*.pyc
