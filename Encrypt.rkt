@@ -16,6 +16,7 @@
 (provide decrypt)
 (provide create-file)
 (provide print-this)
+(provide generate-personal-key)
 
 ;Globals
 (define curr-file-name "")
@@ -26,16 +27,21 @@
 ;----------------------------------------------------------------------
 
 ; Define default-key, key-list and solver-list
-(define A '(82 85 71 2 12 37 88 56 29 79 30 27 82 2 91 67 86 94 72 45 96 92 53 84 1
-            54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
-(define B '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38
-            18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
-(define C '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18
-            98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
-(define D '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91
-            84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
-(define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62
-            76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
+(define A
+  '(82 85 71 2 12 37 88 56 29 79 30 27 82 2 91 67 86 94 72 45 96 92 53 84 1
+    54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
+(define B
+  '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38
+    18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
+(define C
+  '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18
+    98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
+(define D
+  '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91
+    84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
+(define E
+  '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62
+    76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
 
 ; Default key, 250 (* 50 5), random integers [0-100]
 (define default-key (append A B C D E))
@@ -44,6 +50,13 @@
 ; Both uniquely assigned during encrypt/decrypt
 (define key-list '() )
 (define solver-list '() )
+
+
+(define (generate-personal-key)
+  ;Creates a string of 250 random integers [0-200]
+
+  (build-list 250 (lambda (x) (random 200))))
+
 
 (define (get-personal-key)
   ;Gets the personal key from file
@@ -341,105 +354,105 @@
 ;----------------------------------------------
 ; BUILT IN TEXT EDITOR
 ;----------------------------------------------
-  ; Top level frame for editor
-  ;
-  ; gui frame
-  (define editor-frame
-    (new frame%
-         (label "LockNut Editor")
-         (width 500)
-         (height 400)))
+; Top level frame for editor
+;
+; gui frame
+(define editor-frame
+  (new frame%
+       (label "LockNut Editor")
+       (width 500)
+       (height 400)))
 
-  (send editor-frame create-status-line)
+(send editor-frame create-status-line)
 
-  ; Panel for editor text fields
-  ;
-  ; gui v pannel
-  (define editor-info-panel
-    (instantiate
-      vertical-panel% (editor-frame)
-      (stretchable-height #f) ))
+; Panel for editor text fields
+;
+; gui v pannel
+(define editor-info-panel
+  (instantiate
+    vertical-panel% (editor-frame)
+    (stretchable-height #f) ))
 
-  ; Displays the filename of the decrypted file
-  ;
-  ; gui message
-  (define file-info
-    (new message%
-         (label "Filename: ")
-         (parent editor-info-panel)
-         (stretchable-width #t)
-         (auto-resize #t) ))
+; Displays the filename of the decrypted file
+;
+; gui message
+(define file-info
+  (new message%
+       (label "Filename: ")
+       (parent editor-info-panel)
+       (stretchable-width #t)
+       (auto-resize #t) ))
 
-  (define editor-canvas
-    (new editor-canvas% (parent editor-frame)))
+(define editor-canvas
+  (new editor-canvas% (parent editor-frame)))
 
-  (define text-editor (new text%))
-  (define mb (new menu-bar% [parent editor-frame]))
-  (define m-edit (new menu% [label "Edit"] [parent mb]))
-  (define m-font (new menu% [label "Font"] [parent mb]))
+(define text-editor (new text%))
+(define mb (new menu-bar% [parent editor-frame]))
+(define m-edit (new menu% [label "Edit"] [parent mb]))
+(define m-font (new menu% [label "Font"] [parent mb]))
 
-  (append-editor-operation-menu-items m-edit #f)
-  (append-editor-font-menu-items m-font)
-  (send editor-canvas set-editor text-editor)
+(append-editor-operation-menu-items m-edit #f)
+(append-editor-font-menu-items m-font)
+(send editor-canvas set-editor text-editor)
 
-  ; Panel for editor buttons
-  ;
-  ; gui h panel
-  (define editor-button-panel
-    (instantiate
-      horizontal-panel% (editor-frame)
-      (stretchable-height #f) ))
+; Panel for editor buttons
+;
+; gui h panel
+(define editor-button-panel
+  (instantiate
+    horizontal-panel% (editor-frame)
+    (stretchable-height #f) ))
 
-  ; Save and reencrypt the changes to the file
-  ;
-  ; gui button
-  (define editor-reencrypt
-    (new button%
-         (label "Encrypt changes")
-         (parent editor-button-panel)
-         (callback
-           (lambda (b e)
-             (send editor-frame set-status-text "Encrypting...")
+; Save and reencrypt the changes to the file
+;
+; gui button
+(define editor-reencrypt
+  (new button%
+       (label "Encrypt changes")
+       (parent editor-button-panel)
+       (callback
+         (lambda (b e)
+           (send editor-frame set-status-text "Encrypting...")
 
-             ;Save file as .txt
-             (send text-editor save-file curr-file-name 'text)
+           ;Save file as .txt
+           (send text-editor save-file curr-file-name 'text)
 
-             ;Encrypt: Print .locknut, delete .txt
-             (encrypt-file curr-file-name (buff-password unbuffed-password))
-             (send editor-frame set-status-text
-                   "Encryption finished. Original deleted.") )) ))
+           ;Encrypt: Print .locknut, delete .txt
+           (encrypt-file curr-file-name (buff-password unbuffed-password))
+           (send editor-frame set-status-text
+                 "Encryption finished. Original deleted.") )) ))
 
-  ;Save to plain text
-  ;
-  ; gui button
-  (define editor-decrypt
-    (new button%
-         (label "Save to plaintext")
-         (parent editor-button-panel)
-         (callback
-           (lambda (b e)
-             (send editor-frame set-status-text
-                   "File saved. Encrypted version deleted.")
+;Save to plain text
+;
+; gui button
+(define editor-decrypt
+  (new button%
+       (label "Save to plaintext")
+       (parent editor-button-panel)
+       (callback
+         (lambda (b e)
+           (send editor-frame set-status-text
+                 "File saved. Encrypted version deleted.")
 
-             ;Save to .txt
-             (send text-editor save-file curr-file-name 'text)
+           ;Save to .txt
+           (send text-editor save-file curr-file-name 'text)
 
-             ;Delete the .locknut
-             (let ((lockname
-                     (string-append
-                       (substring curr-file-name 0 (- (string-length curr-file-name) 4))
-                       ".locknut")))
-               (when (file-exists? lockname)
-                 (delete-file lockname))) )) ))
+           ;Delete the .locknut
+           (let ((lockname
+                   (string-append
+                     (substring curr-file-name 0 (- (string-length curr-file-name) 4))
+                     ".locknut")))
+             (when (file-exists? lockname)
+               (delete-file lockname))) )) ))
 
-  ;Close
-  ;
-  ; gui button
-  (define editor-close
-    (new button%
-         (label "Close")
-         (parent editor-button-panel)
-         (callback
-           (lambda (b e)
-             ;(send t save-file file-name 'text)
-             (send editor-frame show #f)))))
+;Close
+;
+; gui button
+(define editor-close
+  (new button%
+       (label "Close")
+       (parent editor-button-panel)
+       (callback
+         (lambda (b e)
+           ;(send t save-file file-name 'text)
+           (send editor-frame show #f)))))

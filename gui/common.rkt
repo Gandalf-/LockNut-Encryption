@@ -5,6 +5,7 @@
 (provide (all-defined-out))
 
 ; definitions
+
 (define my-font (make-object font% 10 'modern))
 (define wait-time 1.5)
 
@@ -13,16 +14,19 @@
 (define (help-mode-on) (set! help-mode #t))
 
 
+; frame
+
 (define main-frame
   ; main frame, parent to all other frames and panels
 
   (new frame%
-       (label "LockNut")
+       (label "Locknut")
        (stretchable-width #f)
        (stretchable-height #f)))
 
 
-; text-fields
+; text-field
+
 (define passcode-field
   ;Gets optional password from user
   (new text-field%

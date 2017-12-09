@@ -4,16 +4,23 @@
 
 (require "../Encrypt.rkt")
 (require "common.rkt")
-(require "options-window.rkt")
+(require "options.rkt")
 
 (provide (all-defined-out))
 
+
+; frame
 
 (define create-file-frame
   (new frame%
        (label "New Encrypted File")
        (min-width 500)
        (min-height 450)))
+
+(send create-file-frame create-status-line)
+
+
+; panel
 
 (define create-file-panel-text
   ;Panel for create-file text fields
@@ -22,13 +29,25 @@
     vertical-panel% (create-file-frame)
     (stretchable-height #f)))
 
+(define create-file-panel
+  ;Panel for create-file buttons
+
+  (instantiate
+    horizontal-panel% (create-file-frame)
+    (stretchable-height #f)))
+
+
+; text editor
+
 (define mb (new menu-bar% [parent create-file-frame]))
 (define m-edit (new menu% [label "Edit"] [parent mb]))
 (define m-font (new menu% [label "Font"] [parent mb]))
 
 (append-editor-operation-menu-items m-edit #f)
 (append-editor-font-menu-items m-font)
-(send create-file-frame create-status-line)
+
+
+; text-field
 
 (define create-file-filename-field
   ;Filename field
@@ -46,22 +65,20 @@
        (parent create-file-panel-text)
        (font my-font)))
 
+
+; editor canvas
+
 (define editor-canvas
   ;Editor canvas
 
   (new editor-canvas%
        (parent create-file-frame)))
 
-;Text editor setup
 (define text-field (new text%))
 (send editor-canvas set-editor text-field)
 
-(define create-file-panel
-  ;Panel for create-file buttons
 
-  (instantiate
-    horizontal-panel% (create-file-frame)
-    (stretchable-height #f)))
+; button
 
 (define generate-file-button
   ;Generate new file button
@@ -71,9 +88,10 @@
        (parent create-file-panel)
        (callback
          (lambda (b e)
-           (let ((file-name (string-append
-                              (send create-file-filename-field get-value)
-                              ".txt"))
+           (let ((file-name
+                   (string-append
+                     (send create-file-filename-field get-value) ".txt"))
+
                  (password (send create-file-passcode-field get-value))
                  (pass-key? (send password-is-key-checkbox get-value))
                  (shareable? (send shareable-file-checkbox get-value)))
@@ -153,5 +171,4 @@
        (callback
          (lambda (b e)
            (send create-file-frame show #f))) ))
-
 

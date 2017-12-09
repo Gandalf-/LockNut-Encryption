@@ -1,13 +1,16 @@
 #lang racket
 
+; info
+;
+; info window gui elements
+
 (require racket/gui)
 (require "common.rkt")
 
 (provide (all-defined-out))
 
-;----------------------------------------------------------------------
-;INFORMATION WINDOW
-;----------------------------------------------------------------------
+
+; frame
 
 (define info-frame
   ; top level frame for information window
@@ -19,11 +22,18 @@
        (stretchable-width #f)
        (stretchable-height #f)))
 
+
+; message
+
 (define info-message
   (new message%
-       (label "LockNut: personal file encryption program  \n Austin Voecks, Summer 2014")
+       (label
+         "Locknut: file encryption program  \n Austin Voecks, Summer 2014")
        (font my-font)
        (parent info-frame)))
+
+
+; button
 
 (define readme-button
   (new button%

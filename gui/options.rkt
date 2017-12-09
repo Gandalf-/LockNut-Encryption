@@ -6,6 +6,8 @@
 (provide (all-defined-out))
 
 
+; frame
+
 (define options-frame
   (new frame%
        (label "Advanced Options")
@@ -14,6 +16,8 @@
 (send options-frame create-status-line)
 
 
+; panel
+
 (define options-panel
   ;Panel for options buttons
 
@@ -21,6 +25,8 @@
     vertical-panel% (options-frame)
     (stretchable-height #f)))
 
+
+; check-box
 
 (define password-is-key-checkbox
   ;Use password as the Vigenere key
@@ -66,6 +72,8 @@
                      "Personal base-key loaded. Ready."))))) ))
 
 
+; button
+
 (define options-close
   ;Close the window
 
@@ -75,3 +83,4 @@
        (callback
          (lambda (b e)
            (send options-frame show #f))) ))
+

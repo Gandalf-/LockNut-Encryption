@@ -1,22 +1,21 @@
 #lang racket
 
-; main-window
+; main
 ;
 ; main-window gui elements
 
 (require racket/gui)
 (require "../Encrypt.rkt")
-
 (require "common.rkt")
-(require "create-file.rkt")
-(require "options-window.rkt")
-(require "info-window.rkt")
+(require "create.rkt")
+(require "options.rkt")
+(require "info.rkt")
 
 (provide (all-defined-out))
 
-; frames
 
-; messages
+; message
+
 (define background-image
   ; background, custom nut image
 
@@ -24,7 +23,8 @@
        (label (make-object bitmap% "ln_support/Nut2.jpg"))))
 
 
-; panels
+; panel
+
 (define panel
   ;Panel for file encrypt and decrypt
 
@@ -40,7 +40,8 @@
     (stretchable-height #f)))
 
 
-; buttons
+; button
+
 (define create-file-button
   ;Button that opens create-file-frame, MAIN-FRAME
 
@@ -50,10 +51,9 @@
        (horiz-margin 22)
        (callback
          (lambda (b e)
-           (if (equal? help-mode #f)
+           (if (not help-mode)
              (send create-file-frame show #t)
 
-             ;Help mode
              (begin
                (help-mode-off)
                (send main-frame set-status-text
@@ -62,7 +62,9 @@
                (send main-frame set-status-text
                      "new encrypted file right now")
                (sleep/yield wait-time)
-               (send main-frame set-status-text " "))) )) ))
+               (send main-frame set-status-text " "))
+
+             )))))
 
 (define decrypt-button
   ;Button for unencrypt procedure
@@ -73,11 +75,10 @@
        (horiz-margin 10)
        (callback
          (lambda (b e)
-           (if (equal? help-mode #f)
+           (if (not help-mode)
              (begin
                ;Run decrypt, update status text
-               (send main-frame set-status-text
-                     "Working...")
+               (send main-frame set-status-text "Working...")
 
                ;Decrypt
                (send main-frame set-status-text
@@ -90,13 +91,14 @@
                (send create-file-passcode-field set-value
                      (send passcode-field get-value)))
 
-             ;Help mode
              (begin
                (help-mode-off)
                (send main-frame set-status-text
                      "Shows options to decrypt .locknut files")
                (sleep/yield wait-time)
-               (send main-frame set-status-text " "))) )) ))
+               (send main-frame set-status-text " "))
+
+             )))))
 
 (define options-button
   ;Button that opens advanced options window
@@ -107,16 +109,17 @@
        (horiz-margin 15)
        (callback
          (lambda (b e)
-           (if (equal? help-mode #f)
+           (if (not help-mode)
              (send options-frame show #t)
 
-             ;Help mode
              (begin
                (set help-mode #f)
                (send main-frame set-status-text
                      "Opens window with advanced options")
                (sleep/yield wait-time)
-               (send main-frame set-status-text " "))) )) ))
+               (send main-frame set-status-text " "))
+
+             )))))
 
 (define info-button
   ;Button that displays info, MAIN-FRAME
@@ -127,16 +130,17 @@
        (horiz-margin 0)
        (callback
          (lambda (b e)
-           (if (equal? help-mode #f)
+           (if (not help-mode)
              (send info-frame show #t)
 
-             ;Help mode
              (begin
                (send main-frame set-status-text
                      "Open window with program information")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")
-               (help-mode-off))) )) ))
+               (help-mode-off))
+
+             )))))
 
 (define help-button
   ;Help button, MAIN-FRAME
@@ -151,5 +155,4 @@
            (help-mode-on)
            (send main-frame set-status-text
                  "Click on a button for help")))))
-
 
