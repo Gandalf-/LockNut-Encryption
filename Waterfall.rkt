@@ -154,9 +154,8 @@
          (msg-list    ; list of string
            (split-list (string->list input) (length key-list))))
 
-    (if (equal? encrypt #t)
-      (concat
-        (waterfall-encrypt msg-list key-list))
-
-      (concat
-        (waterfall-decrypt msg-list key-list)))) )
+    (concat
+      ((if encrypt
+         waterfall-encrypt
+         waterfall-decrypt)
+       msg-list key-list))))

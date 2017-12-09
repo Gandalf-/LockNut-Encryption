@@ -1,11 +1,10 @@
 *.locknut
 *.zip
-Testing!.txt
 *.bak
 *.swp
 *.md~
-Testing.rkt
 *.1
 *.dep
 *.zo
 ln_data
+compiled

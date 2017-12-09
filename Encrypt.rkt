@@ -45,35 +45,39 @@
 (define key-list '() )
 (define solver-list '() )
 
-;Gets the personal key from file
-;
-; string -> list of integers
 (define (get-personal-key)
+  ;Gets the personal key from file
+  ;
+  ; string -> list of integers
+
   (map
     string->number
     (string-split (file->listChars "ln_data/PersonalKey.locknut"))))
 
 
-;Take the inverse of the encryption key to make the decryption key
-;Creates the inverse of the key-list for solving
-;
-; list of integers -> list of integers
 (define (create-solver key-list)
+  ;Take the inverse of the encryption key to make the decryption key
+  ;Creates the inverse of the key-list for solving
+  ;
+  ; list of integers -> list of integers
+
   (map (lambda (x) (* -1 x)) key-list))
 
 
-;Make encryption key
-;Generate a key-list (list of integers indicating shift amounts) from the given password
-;
-; string -> list of integers
 (define (password->key-list password)
+  ;Make encryption key
+  ;Generate a key-list (list of integers indicating shift amounts) from the given password
+  ;
+  ; string -> list of integers
+
   (map char->integer (string->list password)))
 
 
-;Add the password-key-list to the default key-list, to make it unique to the given password
-;
-; list of integers -> list of integers
 (define (alter-key-list default-key-list pass-input-list)
+  ;Add the password-key-list to the default key-list, to make it unique to the given password
+  ;
+  ; list of integers -> list of integers
+
   (if (< (length pass-input-list)
          (length default-key-list))
     (alter-key-list
@@ -86,15 +90,18 @@
       (take pass-input-list (length default-key-list)))))
 
 
-; Checks for blank password, then generates the both the encryption and decryption
-; keys. These aren't passed out. They're values are set to key-list and solver-list,
-; predefined variables. This is done because they're needed in multiple places and
-; between mutliple runs of these functions
-;
-; string, bool, bool -> string
 (define (generate-key-and-solver password password-is-key?-value shareable?)
+  ; Checks for blank password, then generates the both the encryption and
+  ; decryption keys. These aren't passed out. They're values are set to
+  ; key-list and solver-list, predefined variables. This is done because
+  ; they're needed in multiple places and between mutliple runs of these
+  ; functions
+  ;
+  ; string, bool, bool -> string
 
-  ;Determine which base-key to use. Default for shareable, Personal for not shareable
+  ;Determine which base-key to use. Default for shareable, Personal for not
+  ;shareable
+
   (let ((base-key '()))
     (if (equal? #t shareable?)
       ;Use the default, shareable
@@ -125,28 +132,31 @@
 ;FILE IO
 ;----------------------------------------------------------------------
 
-;Moves the file into a string
-;
-; string -> string
 (define (file->listChars filename)
+  ;Moves the file into a string
+  ;
+  ; string -> string
+
   (letrec ((in (open-input-file filename))
            (out (port->string in)))
     (close-input-port in)
     out))
 
 
-;Creates a new UTF8 .txt file by copying a blank copy
-;
-; string -> none
 (define (init-file name)
+  ;Creates a new UTF8 .txt file by copying a blank copy
+  ;
+  ; string -> none
+
   (when (file-exists? name)
     (delete-file name))
   (copy-file "ln_support.txt" name #f))
 
 
-;Prints x to a file
-; any, string -> none
 (define (print-this x name)
+  ;Prints x to a file
+  ; any, string -> none
+
   (call-with-output-file* name #:exists 'replace
                           (lambda (output-port)
                             (display x output-port))))
