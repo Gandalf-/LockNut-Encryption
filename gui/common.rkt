@@ -34,3 +34,32 @@
        (parent main-frame)
        (font my-font)))
 
+; text-editor
+
+(define text-editor (new text%))
+
+; gui frame
+(define editor-frame
+  (new frame%
+       (label "LockNut Editor")
+       (width 500)
+       (height 400)))
+
+; Panel for editor text fields
+;
+; gui v pannel
+(define editor-info-panel
+  (instantiate
+    vertical-panel% (editor-frame)
+    (stretchable-height #f) ))
+
+; Displays the filename of the decrypted file
+;
+; gui message
+(define file-info
+  (new message%
+       (label "Filename: ")
+       (parent editor-info-panel)
+       (stretchable-width #t)
+       (auto-resize #t) ))
+

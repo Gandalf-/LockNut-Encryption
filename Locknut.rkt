@@ -6,6 +6,7 @@
 
 (require racket/gui)
 (require "Encrypt.rkt")
+(require "common.rkt")
 (require "gui/common.rkt")
 (require "gui/main.rkt")
 (require "gui/info.rkt")
