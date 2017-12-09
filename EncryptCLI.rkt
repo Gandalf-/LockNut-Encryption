@@ -24,16 +24,21 @@
 ;----------------------------------------------------------------------
 
 ; Define default-key, key-list and solver-list
-(define A '(82 85 71 2 12 37 88 56 29 79 30 27 82 2 91 67 86 94 72 45 96 92 53 84 1
-            54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
-(define B '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38
-            18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
-(define C '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18
-            98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
-(define D '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91
-            84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
-(define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62
-            76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
+(define A
+  '(82 85 71 2 12 37 88 56 29 79 30 27 82 2 91 67 86 94 72 45 96 92 53 84 1
+    54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
+(define B
+  '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38
+    18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
+(define C
+  '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18
+    98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
+(define D
+  '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91
+    84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
+(define E
+  '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62
+    76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
 
 ; Default key, 250 (* 50 5), random integers [0-100]
 (define default-key (append A B C D E))
@@ -43,35 +48,45 @@
 (define key-list '() )
 (define solver-list '() )
 
-;Gets the personal key from file
-;
-; string -> list of integers
+
 (define (get-personal-key)
+  ; Gets the personal key from file
+  ;
+  ; @return  list of integers
   (map
     string->number
     (string-split (file->listChars "ln_data/PersonalKey.locknut"))))
 
 
-;Take the inverse of the encryption key to make the decryption key
-;Creates the inverse of the key-list for solving
-;
-; list of integers -> list of integers
 (define (create-solver key-list)
+  ; Take the inverse of the encryption key to make the decryption key. Creates
+  ; the inverse of the key-list for solving
+  ;
+  ; @key-list   list of integers
+  ; @return     list of integers
+
   (map (lambda (x) (* -1 x)) key-list))
 
 
-;Make encryption key
-;Generate a key-list (list of integers indicating shift amounts) from the given password
-;
-; string -> list of integers
 (define (password->key-list password)
+  ; Make encryption key
+  ;
+  ; Generate a key-list (list of integers indicating shift amounts) from the
+  ; given password
+  ;
+  ; @password   string
+  ; @return     list of integers
+
   (map char->integer (string->list password)))
 
 
-;Add the password-key-list to the default key-list, to make it unique to the given password
-;
-; list of integers -> list of integers
+
 (define (alter-key-list default-key-list pass-input-list)
+  ; Add the password-key-list to the default key-list, to make it unique to the
+  ; given password
+  ;
+  ; list of integers -> list of integers
+
   (if (< (length pass-input-list)
          (length default-key-list))
     (alter-key-list
@@ -84,15 +99,18 @@
       (take pass-input-list (length default-key-list)))))
 
 
-; Checks for blank password, then generates the both the encryption and decryption
-; keys. These aren't passed out. They're values are set to key-list and solver-list,
-; predefined variables. This is done because they're needed in multiple places and
-; between mutliple runs of these functions
-;
-; string, bool, bool -> string
 (define (generate-key-and-solver password password-is-key?-value shareable?)
+  ; Checks for blank password, then generates the both the encryption and
+  ; decryption keys. These aren't passed out. They're values are set to
+  ; key-list and solver-list, predefined variables. This is done because
+  ; they're needed in multiple places and between mutliple runs of these
+  ; functions
+  ;
+  ; Determine which base-key to use. Default for shareable, Personal for not
+  ; shareable
+  ;
+  ; string, bool, bool -> string
 
-  ;Determine which base-key to use. Default for shareable, Personal for not shareable
   (let ((base-key '()))
     (if (equal? #t shareable?)
       ;Use the default, shareable
@@ -122,22 +140,34 @@
 ;FILE IO
 ;----------------------------------------------------------------------
 
-;Moves the file into a string
 (define (file->listChars filename)
+  ; Moves the file into a string
+  ;
+  ; @filename   string
+
   (letrec ((in (open-input-file filename))
            (out (port->string in)))
     (close-input-port in)
     out))
 
-;Creates a UTF8 .txt file
 (define (init-file name)
+  ; Creates a UTF8 .txt file
+  ;
+  ; @name     string
+  ; @return   none
+
   (when (file-exists? name)
     (delete-file name))
   ;Copy UTF8
   (copy-file "Support/UTF8.txt" name #f))
 
-;Prints x to a file
 (define (print-this x name)
+  ; Prints x to a file
+  ;
+  ; @x        string
+  ; @name     string
+  ; @return   none
+
   (call-with-output-file*
     name #:exists 'replace
     (lambda (output-port)
@@ -145,8 +175,12 @@
 
 ;HELPERS
 ;------------
-;Buffers the password to 50 characters using the default password
 (define (buff-password password)
+  ; Buffers the password to 50 characters using the default password
+  ;
+  ; @password   string
+  ; @return     string
+
   (if (>= (string-length password) 50)
     (substring password 0 50)
     (string-append password
@@ -154,8 +188,12 @@
                               0
                               (- 50 (string-length password)))) ))
 
-;Buffers a string >60 characters
 (define (buff-string input)
+  ; Buffers a string >60 characters
+  ;
+  ; @input    string
+  ; @return   string
+
   (let ((str-len (string-length input)))
     (if (>= str-len 60)
       (string-append "..." (substring input (- str-len 60) str-len))
@@ -165,10 +203,10 @@
 ;================================================
 
 ;FILE ENCRYPTION
-; CALLED BY CREATE-FILE, decrypt
-; Takes a file as input and prints the encrypted version of the file to a .locknut file
-;--------------------------------------------------------------------------------
 (define (encrypt-file input-file-name password)
+  ; CALLED BY CREATE-FILE, decrypt Takes a file as input and prints the
+  ; encrypted version of the file to a .locknut file
+
   (let (;Get string from source file, add password to front
         (plain-text
           (string-append
@@ -198,13 +236,15 @@
 
 
 ;FILE DECRYPTION
-; CALLED BY CREATE-FILE, decrypt
-; Takes an encrypted .locknut file as input and prints the decrypted version of the
-; file to a text file.
-; If glancing, open the file in notepad and delete when the user is finished.
-; Otherwise, rename the decrypted text file to the original name of the input
-;--------------------------------------------------------------------------------
 (define (decrypt-file input-file-name password)
+  ; CALLED BY CREATE-FILE, decrypt Takes an encrypted. locknut file as input
+  ; and prints the decrypted version of the file to a text file. If glancing,
+  ; open the file in notepad and delete when the user is finished. Otherwise,
+  ; rename the decrypted text file to the original name of the input
+  ;
+  ; @input-file-name  string
+  ; @password         string
+
   ;Get the char-list from the encryped file
   (let (;Get the char-list from the encryped file
         (chars-list (string->list (file->listChars input-file-name)))

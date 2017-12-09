@@ -15,7 +15,7 @@
 ;--------------------------------------------
 (require "EncryptCLI.rkt")
 
-; Commandline arguements
+; Commandline arguments
 (define pass "")
 (define file "")
 (define encrypt? #f)
@@ -23,6 +23,7 @@
 (define share? #f)
 (define pass-is-key? #f)
 (define help? #f)
+
 
 (define locknut
   (command-line
@@ -43,18 +44,20 @@
     #:args (filename)
     (set! file filename)))
 
-;Creates a string of 250 random integers [0-200]
-(define (generate-personal-key)
-  (let loop ((out "" )
-             (i 0))
-    (if (= i 250)
-      out
-      (loop (string-append out (number->string (random 100)) " ")
-            (+ i 1))) ))
 
-;Startup sequence. Check for PersonalKey file, otherwise
-; run first time setup: Generate personal key, offer readme
+(define (generate-personal-key)
+  ;Creates a string of 250 random integers [0-200]
+
+  (string-join
+    (build-list
+      250
+      (lambda (_) (number->string (random 200))))))
+
+
 (define (startup)
+  ;Startup sequence. Check for PersonalKey file, otherwise run first time
+  ;setup: Generate personal key, offer readme
+
   (unless (file-exists? "ln_data/PersonalKey.locknut")
     ;Create personal key
     (displayln "Running first-time initialization sequence...")
@@ -64,14 +67,19 @@
     (sleep 1.5)
     (displayln "Personal encryption key generated. Ready.") ))
 
-(startup)
+(define (main)
+  (begin
+    (startup)
 
-;Decrypt
-(when decrypt?
-  (displayln
-    (decrypt file pass pass-is-key? share?)))
+    (when decrypt?
+      ; Decrypt
+      (displayln
+        (decrypt file pass pass-is-key? share?)))
 
-;Encrypt
-(when encrypt?
-  (displayln
-    (create-file file pass pass-is-key? share?)))
+    (when encrypt?
+      ; Encrypt
+      (displayln
+        (create-file file pass pass-is-key? share?)))
+    ))
+
+(main)

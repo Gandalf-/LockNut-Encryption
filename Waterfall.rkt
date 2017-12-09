@@ -7,7 +7,8 @@
 (define (inverse-list l)
   ; takes the inverse of the list
   ;
-  ; @l  list of real
+  ; @l      list of real
+  ; @return list of real
 
   (map (lambda (x) (* -1 x)) l))
 
@@ -16,7 +17,8 @@
   ; list of string to list of ints where the ints are the ascii value for the
   ; string character at that position
   ;
-  ; @in   string
+  ; @in       string
+  ; @return   list of int
 
   (map
     char->integer
@@ -26,7 +28,8 @@
 (define (concat in)
   ; concatentate a list of strings
   ;
-  ; @in   list of string
+  ; @in       list of string
+  ; @return   string
 
   (foldr string-append "" in))
 
@@ -34,8 +37,9 @@
 (define (split-list l chunk)
   ; split the input list of characters into strings of chunk length
   ;
-  ; @l      list of char
-  ; @chunk  int
+  ; @l        list of char
+  ; @chunk    int
+  ; @return   list of string
 
   (let splitter ((result '())
                  (remaining l))
@@ -55,8 +59,9 @@
 (define (extend l n)
   ; extend a list to length 'n' by appending it to itself
   ;
-  ; @l  list of any
-  ; @n  int
+  ; @l        list of any
+  ; @n        int
+  ; @return   list of any
 
   (take (flatten (make-list n l)) n))
 
@@ -64,7 +69,8 @@
 (define (drop-last l)
   ; drop the last element from a list
   ;
-  ; @l  list of any
+  ; @l        list of any
+  ; @return   list of any
 
   (take l (- (length l) 1)))
 
@@ -73,8 +79,9 @@
   ; encrypts input with the key. Simple Viegenere Cipher
   ; substitution cipher, no negative values
   ;
-  ; @input string
-  ; @key   list of int
+  ; @input    string
+  ; @key      list of int
+  ; @return   string
 
   (let ((characters (ord-string input)))
     (list->string
@@ -95,8 +102,9 @@
   ; encrypting the current chunk with the next chunk until we get to the last
   ; chunk, which is encrypted with the argument key
   ;
-  ; @input  list of string
-  ; @key    list of int
+  ; @input    list of string
+  ; @key      list of int
+  ; @return   list of string
 
   (map vigenere
        input
@@ -109,22 +117,23 @@
 (define (waterfall-decrypt input key)
   ; decrypts a waterfall encrypted list of characters
   ;
-  ; @input  list of string
-  ; @key    list of int
+  ; @input    list of string
+  ; @key      list of int
+  ; @return   list of string
 
-  (define (worker top bottom output)
+  (define (cipher top bottom output)
 
     (if (empty? top)
       output
 
       (let ((result (vigenere (car top) bottom)))
-        (worker
+        (cipher
           (cdr top)
           (ord-string result)
           (append output (list result))
           ))))
 
-  (worker input key '() ))
+  (cipher input key '() ))
 
 
 (define (waterfall input key encrypt)
@@ -135,6 +144,7 @@
   ; @input    string
   ; @key      string
   ; @encrypt  bool
+  ; @return   string
 
   (let* ((key-list    ; list of int
            (ord-string

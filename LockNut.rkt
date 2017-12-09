@@ -18,43 +18,47 @@
 ;----------------------------------------------------------------------
 ;MAIN-WINDOW
 ;----------------------------------------------------------------------
-(define main-frame 
+(define main-frame
   (new frame%
        (label "LockNut")
        (stretchable-width #f)
        (stretchable-height #f)))
 
-;Background, custom nut image
-(define background-image 
-  (new message% [parent main-frame] 
+(define background-image
+  ;Background, custom nut image
+
+  (new message% [parent main-frame]
        (label (make-object bitmap% "ln_support/Nut2.jpg"))))
 
-;Panel for file encrypt and decrypt
-(define panel 
-  (instantiate 
+(define panel
+  ;Panel for file encrypt and decrypt
+
+  (instantiate
     horizontal-panel% (main-frame)
     (stretchable-height #f)))
 
-;Panel for information and help buttons
-(define info-help-panel 
-  (instantiate 
+(define info-help-panel
+  ;Panel for information and help buttons
+
+  (instantiate
     horizontal-panel% (main-frame)
     (stretchable-height #f)))
 
-;Gets optional password from user
 (define passcode-field
+  ;Gets optional password from user
   (new text-field%
        (label "Password")
        (parent main-frame)
        (font my-font)))
 
-;Button that opens create-file-frame, MAIN-FRAME
 (define create-file-button
+  ;Button that opens create-file-frame, MAIN-FRAME
+
   (new button%
        (label "Encrypted File")
        (parent panel)
        (horiz-margin 22)
-       (callback 
+       (callback
          (lambda (b e)
            (if (equal? help-mode #f)
              (send create-file-frame show #t)
@@ -62,26 +66,27 @@
              ;Help mode
              (begin
                (set! help-mode #f)
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Opens window with options for creating a...")
                (sleep/yield wait-time)
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "new encrypted file right now")
                (sleep/yield wait-time)
                (send main-frame set-status-text " "))) )) ))
 
-;Button for unencrypt procedure
 (define decrypt-button
+  ;Button for unencrypt procedure
+
   (new button%
        (label "Decrypt File")
        (parent panel)
        (horiz-margin 10)
-       (callback 
+       (callback
          (lambda (b e)
            (if (equal? help-mode #f)
              (begin
                ;Run decrypt, update status text
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Working...")
 
                ;Decrypt
@@ -98,20 +103,20 @@
              ;Help mode
              (begin
                (set! help-mode #f)
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Shows options to decrypt .locknut files")
                (sleep/yield wait-time)
                (send main-frame set-status-text " "))) )) ))
 
 
-;Button that opens advanced options window
-;-> gui button
 (define options-button
+  ;Button that opens advanced options window
+
   (new button%
        (label "Options")
        (parent info-help-panel)
        (horiz-margin 15)
-       (callback 
+       (callback
          (lambda (b e)
            (if (equal? help-mode #f)
              (send options-frame show #t)
@@ -119,41 +124,41 @@
              ;Help mode
              (begin
                (set help-mode #f)
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Opens window with advanced options")
                (sleep/yield wait-time)
                (send main-frame set-status-text " "))) )) ))
 
 
-;Button that displays info, MAIN-FRAME
-;-> gui button
 (define info-button
+  ;Button that displays info, MAIN-FRAME
+
   (new button%
        (label "Info")
        (parent info-help-panel)
        (horiz-margin 0)
-       (callback 
+       (callback
          (lambda (b e)
            (if (equal? help-mode #f)
              (send info-frame show #t)
 
              ;Help mode
              (begin
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Open window with program information")
                (sleep/yield wait-time)
                (send main-frame set-status-text " ")
                (set! help-mode #f))) )) ))
 
 
-;Help button, MAIN-FRAME
-;-> gui button
 (define help-button
+  ;Help button, MAIN-FRAME
+
   (new button%
        (label "Help")
        (parent info-help-panel)
        (horiz-margin 12)
-       (callback 
+       (callback
          (lambda
            (b e)
            (set! help-mode #t)
@@ -170,8 +175,9 @@
        (min-width 500)
        (min-height 450)))
 
-;Panel for create-file text fields
-(define create-file-panel-text 
+(define create-file-panel-text
+  ;Panel for create-file text fields
+
   (instantiate
     vertical-panel% (create-file-frame)
     (stretchable-height #f)))
@@ -184,22 +190,25 @@
 (append-editor-font-menu-items m-font)
 (send create-file-frame create-status-line)
 
-;Filename field
 (define create-file-filename-field
+  ;Filename field
+
   (new text-field%
        (label "Filename")
        (parent create-file-panel-text)
        (font my-font)))
 
-;Create file password
 (define create-file-passcode-field
+  ;Create file password
+
   (new text-field%
        (label "Password")
        (parent create-file-panel-text)
        (font my-font)))
 
-;Editor canvas
 (define editor-canvas
+  ;Editor canvas
+
   (new editor-canvas%
        (parent create-file-frame)))
 
@@ -207,21 +216,23 @@
 (define text-field (new text%))
 (send editor-canvas set-editor text-field)
 
-;Panel for create-file buttons
-(define create-file-panel 
-  (instantiate 
+(define create-file-panel
+  ;Panel for create-file buttons
+
+  (instantiate
     horizontal-panel% (create-file-frame)
     (stretchable-height #f)))
 
-;Generate new file button
 (define generate-file-button
+  ;Generate new file button
+
   (new button%
        (label "Create and Encrypt")
        (parent create-file-panel)
-       (callback 
+       (callback
          (lambda (b e)
-           (let ((file-name (string-append 
-                              (send create-file-filename-field get-value) 
+           (let ((file-name (string-append
+                              (send create-file-filename-field get-value)
                               ".txt"))
                  (password (send create-file-passcode-field get-value))
                  (pass-key? (send password-is-key-checkbox get-value))
@@ -229,7 +240,7 @@
 
              ;Check for empty file name
              (if (string=? "" file-name)
-               (send create-file-frame set-status-text 
+               (send create-file-frame set-status-text
                      "File name must not be blank")
 
                (begin
@@ -237,42 +248,44 @@
                  (send text-field save-file file-name 'text)
 
                  ;Run encrypt/decrypt, update status text
-                 (send create-file-frame set-status-text 
+                 (send create-file-frame set-status-text
                        "Working...")
-                 (create-file 
+                 (create-file
                    file-name password pass-key? shareable?)
 
-                 (send main-frame set-status-text 
+                 (send main-frame set-status-text
                        "Encryption complete")
 
                  ;Hide create-file window
                  (send create-file-frame show #f)
 
                  ;Password changes onto other passcode fields
-                 (send passcode-field set-value 
+                 (send passcode-field set-value
                        (send create-file-passcode-field get-value)) )) ))) ))
 
 
-;Load preexisting file into the editor
 (define create-file-load
+  ;Load preexisting file into the editor
+
   (new button%
        (label "Load existing file")
        (parent create-file-panel)
-       (callback 
+       (callback
          (lambda (b e)
 
            ;Get and verify file
            (let ((chosen-file (get-file)))
              (if (equal? chosen-file #f)
-               (send create-file-frame set-status-text 
+               (send create-file-frame set-status-text
                      "No file chosen")
 
                (begin
                  (set! chosen-file (path->string chosen-file))
 
-                 (if (equal? ".locknut" 
-                             (substring chosen-file (- (string-length chosen-file) 8)))
-                   (send create-file-frame set-status-text 
+                 (if (equal? ".locknut"
+                             (substring chosen-file
+                                        (- (string-length chosen-file) 8)))
+                   (send create-file-frame set-status-text
                          "Cannot load .locknut files")
 
                    (begin
@@ -282,18 +295,22 @@
                      ;Update fields, remove .txt from loaded file name
                      (send create-file-passcode-field set-value
                            (send passcode-field get-value))
+
                      (send create-file-filename-field set-value
-                           (substring chosen-file 0 (- (string-length chosen-file) 4)))
-                     (send create-file-frame set-status-text 
+                           (substring chosen-file
+                                      0 (- (string-length chosen-file) 4)))
+
+                     (send create-file-frame set-status-text
                            "File loaded")) ))) ))) ))
 
 
-;Button that cancels the create-file sequence
 (define create-file-cancel
+  ;Button that cancels the create-file sequence
+
   (new button%
        (label "Cancel")
        (parent create-file-panel)
-       (callback 
+       (callback
          (lambda (b e)
            (send create-file-frame show #f))) ))
 
@@ -309,61 +326,65 @@
 (send options-frame create-status-line)
 
 
-;Panel for options buttons
-(define options-panel 
-  (instantiate 
+(define options-panel
+  ;Panel for options buttons
+
+  (instantiate
     vertical-panel% (options-frame)
     (stretchable-height #f)))
 
 
-;Use password as the Vigenere key
 (define password-is-key-checkbox
+  ;Use password as the Vigenere key
+
   (new check-box%
        (label "Use password as Vigenere cipher key")
        (parent options-panel)
-       (callback 
+       (callback
          (lambda (b e)
            (if (send password-is-key-checkbox get-value)
 
              ;Use password as key
-             (send options-frame set-status-text 
+             (send options-frame set-status-text
                    "Warning: A short password greatly weakens the encryption")
 
              ;Use default
-             (send options-frame set-status-text 
+             (send options-frame set-status-text
                    "Encryption key set back to default value")))) ))
 
 
-;Shareable files use the standard base key instead of personal key
 (define shareable-file-checkbox
+  ;Shareable files use the standard base key instead of personal key
+
   (new check-box%
        (label "Encrypt/Decrypt with standard key. Shareable mode.")
        (parent options-panel)
-       (callback 
+       (callback
          (lambda (b e)
            (if (send shareable-file-checkbox get-value)
 
              ;Shareable file
              (begin
-               (send options-frame set-status-text 
+               (send options-frame set-status-text
                      "Encrypt/decrypt with standard base-key.")
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Standard base-key loaded. Ready."))
 
              ;Not Shareable
              (begin
-               (send options-frame set-status-text 
+               (send options-frame set-status-text
                      "Encrypt/decrypt with the personal base-key on this system.")
-               (send main-frame set-status-text 
+               (send main-frame set-status-text
                      "Personal base-key loaded. Ready."))))) ))
 
 
-;Close the window
 (define options-close
+  ;Close the window
+
   (new button%
        (label "Close")
        (parent options-panel)
-       (callback 
+       (callback
          (lambda (b e)
            (send options-frame show #f))) ))
 
@@ -372,9 +393,9 @@
 ;INFORMATION WINDOW
 ;----------------------------------------------------------------------
 
-; top level frame for information window
-; => gui frame
 (define info-frame
+  ; top level frame for information window
+
   (new frame%
        (label "Information")
        (width 200)
@@ -382,14 +403,12 @@
        (stretchable-width #f)
        (stretchable-height #f)))
 
-; => gui message
 (define info-message
   (new message%
        (label "LockNut: personal file encryption program  \n Austin Voecks, Summer 2014")
        (font my-font)
        (parent info-frame)))
 
-; => gui button
 (define readme-button
   (new button%
        (label "View readme")
@@ -398,7 +417,6 @@
        (callback (lambda (b e)
                    (system "notepad.exe README.md")))))
 
-; => gui button
 (define info-close
   (new button%
        (label "Close")
@@ -411,9 +429,9 @@
 ;INIT
 ;----------------------------------------------------------------------
 
-;Top level frame for init window
-; => gui frame
 (define init-frame
+  ;Top level frame for init window
+
   (new frame%
        (label "Welcome to LockNut!")
        (width 400)
@@ -422,16 +440,16 @@
        (stretchable-height #f)))
 
 
-;Background, custom nut image
-; => gui message
-(define init-background-image 
-  (new message% [parent init-frame] 
+(define init-background-image
+  ;Background, custom nut image
+
+  (new message% [parent init-frame]
        (label (make-object bitmap% "ln_support/Nut.jpg"))))
 
 
-;Open the readme in notepad
-; => gui button
 (define init-readme-button
+  ;Open the readme in notepad
+
   (new button%
        (label "View readme")
        (parent init-frame)
@@ -440,52 +458,51 @@
                    (system "notepad.exe README.md")))))
 
 
-;Close the init-window, open the main window
-; => gui button
 (define init-close
+  ;Close the init-window, open the main window
   (new button%
        (label "Let's go!")
        (parent init-frame)
-       (callback 
+       (callback
          (lambda (b e)
            (send main-frame show #t)
            (send main-frame create-status-line)
            (send init-frame show #f)))))
 
 
-;Creates a string of 250 random integers [0-200]
-; => none -> string
 (define (generate-personal-key)
+  ;Creates a string of 250 random integers [0-200]
+
   (build-list 250 (lambda (x) (random 200))))
 
 
-;Startup sequence. Check for PersonalKey file, otherwise
-; run first time setup: Generate personal key, offer readme
-; => none -> none
 (define (startup)
+  ;Startup sequence. Check for PersonalKey file, otherwise run first time
+  ;setup: Generate personal key, offer readme
+
   (if (file-exists? "ln_data/PersonalKey.locknut")
 
     ;Assume already ran init sequence
     (begin
       (send main-frame create-status-line)
       (send main-frame show #t)
-      (send main-frame set-status-text 
+      (send main-frame set-status-text
             "Personal key loaded. Ready."))
 
     ;Create personal key
     (begin
       (send init-frame create-status-line)
       (send init-frame show #t)
-      (send init-frame set-status-text 
+      (send init-frame set-status-text
             "Running first-time initialization sequence...")
 
       (unless (directory-exists? "ln_data")
         (make-directory "ln_data"))
 
-      (print-this (generate-personal-key) 
+      (print-this (generate-personal-key)
                   "ln_data/PersonalKey.locknut")
       (sleep 1.5)
-      (send init-frame set-status-text 
+      (send init-frame set-status-text
             "Personal encryption key generated. Ready."))))
 
 (startup)
