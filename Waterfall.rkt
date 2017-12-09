@@ -1,114 +1,152 @@
 #lang racket
 
 (require openssl/sha1)
-(provide waterfall)
+(provide (all-defined-out))
 
-;HELPERS
-;====================================
-;Takes the inverse of the list
-(define (inverse-list key-list)
-  (map
-    (lambda (x) (* -1 x))
-    key-list))
 
-;Replace password->key-list
-(define (string->integer-list in)
+(define (inverse-list l)
+  ; takes the inverse of the list
+  ;
+  ; @l  list of real
+
+  (map (lambda (x) (* -1 x)) l))
+
+
+(define (ord-string in)
+  ; list of string to list of ints where the ints are the ascii value for the
+  ; string character at that position
+  ;
+  ; @in   string
+
   (map
     char->integer
     (string->list in)))
 
-;Takes a list of strings and appends them together
-(define (list-strings->string in)
+
+(define (concat in)
+  ; concatentate a list of strings
+  ;
+  ; @in   list of string
+
   (foldr string-append "" in))
 
-;Split the input list of characters into strings of len length
-(define (split-list input len)
-  (let loop ((out '() )
-             (curr input))
-    (if (> len (length curr))
 
-      ;Remove potential empty string in results
-      (let ((res (reverse (cons (list->string curr)
-                                out))))
-        (if (string=? (last res) "")
-          (take res (- (length res) 1))
-          res))
+(define (split-list l chunk)
+  ; split the input list of characters into strings of chunk length
+  ; 
+  ; @l      list of char
+  ; @chunk  int
 
-      ;Add len elements to output
-      (loop (cons (list->string (take curr len))
-                  out)
-            (list-tail curr len)) )))
+  (let splitter ((result '())
+                 (remaining l))
 
-;ENCRYPTION FUNCS
-;====================================
-;Encrypts input with the key. Simple Viegenere Cipher
-(define (cipher input key)
-  (let loop ((in (string->integer-list input))
-             (k key))
+    (if (empty? remaining)
+      result
 
-    ;Buffer key to length of input
-    (if (> (length in) (length k))
-      (loop in
-            (flatten (cons k k)))
+      (let ((size (min chunk (length remaining))))
+        (splitter 
+          (append result 
+                  (list (list->string (take remaining 
+                                            size))))
+          (list-tail remaining size)
+          )))))
 
-      ;Substitution cipher, no negative values
-      (list->string
-        (map
-          (lambda (x y)
-            (if (< 0 (+ x y))
-              (integer->char (+ x y))
-              (integer->char (+ x 0))))
-          in (take k (length in))) ))))
 
-;Encrypts a list of characters broken into sublists
+(define (extend l n)
+  ; extend a list to length 'n' by appending it to itself
+  ;
+  ; @l  list of any
+  ; @n  int
+
+  (take (flatten (make-list n l)) n))
+
+
+(define (drop-last l)
+  ; drop the last element from a list
+  ; 
+  ; @l  list of any
+
+  (take l (- (length l) 1)))
+
+
+(define (vigenere input key)
+  ; encrypts input with the key. Simple Viegenere Cipher
+  ; substitution cipher, no negative values
+  ;
+  ; @input string
+  ; @key   list of int
+
+  (let ((characters (ord-string input)))
+    (list->string
+      (map
+        (lambda (x y)
+          (integer->char
+            (bitwise-xor x y)))
+
+        characters
+
+        ; make the input and key the same size by extending the key if needed
+        (extend key (length characters))
+        ))))
+
+
 (define (waterfall-encrypt input key)
-  (let loop ((out '() )
-             (curr input))
+  ; encrypts a list of characters broken into sublists. we work forwards,
+  ; encrypting the current chunk with the next chunk until we get to the last
+  ; chunk, which is encrypted with the argument key
+  ;
+  ; @input  list of string
+  ; @key    list of int
 
-    (if (= 1 (length curr))
-      ;Add on the first element, encrypted with the key
-      (cons (cipher (car input) key)
-            (reverse out))
+  (map vigenere
+       input
+       (append 
+         (list key)
+         (map ord-string (drop-last input))
+         )))
 
-      ;Encrypt the next element with the current element as its key
-      (loop (cons (cipher (car (cdr curr))
-                          (string->integer-list (car curr)))
-                  out)
-            (cdr curr)) )))
 
-;Decrypts a waterfall encrypted list of characters
 (define (waterfall-decrypt input key)
-  (let loop ((out (list (cipher (car input) key)))
-             (curr input))
+  ; decrypts a waterfall encrypted list of characters
+  ; 
+  ; @input  list of string
+  ; @key    list of int
 
-    (if (= 1 (length curr))
-      (reverse out)
+  (define (worker top bottom output)
 
-      ;Decrypt the next element with the current, already decrypted element
-      (loop (cons (cipher (car (cdr curr))
-                          (inverse-list (string->integer-list (car out))))
-                  out)
-            (cdr curr)) )))
+    (if (empty? top)
+      output
 
-;MAIN
-;====================================
-;Encrypts or decrypts strings
-(define (waterfall input key mode)
-  ;Prepare input: hash password, in -> list
-  (let ((key-list (string->integer-list
-                    (sha1 (open-input-bytes
-                            (string->bytes/locale key)))))
-        (in (string->list input)))
+      (let ((result (vigenere (car top) bottom)))
+        (worker
+          (cdr top)
+          (ord-string result)
+          (append output (list result))
+          ))))
 
-    ;Get length for spliting, and split the input
-    (letrec ((len (length key-list))           
-             (lists (split-list in len)))
+  (worker input key '() ))
 
-      (if (equal? mode #t)
-        ;Encrypt
-        (list-strings->string
-          (waterfall-encrypt lists key-list))
 
-        ;Decrypt
-        (list-strings->string
-          (waterfall-decrypt lists (inverse-list key-list)))) )))
+(define (waterfall input key encrypt)
+  ; Encrypts or decrypts strings using the waterfall algorithm, the input key
+  ; is only used with the first chunk of the input, subsequence chunks' key is
+  ; the previous chunk. chunk size is determined by the length of the key
+  ;
+  ; @input    string
+  ; @key      string
+  ; @encrypt  bool
+
+  (let* ((key-list    ; list of int
+           (ord-string
+             (sha1 (open-input-bytes
+                     (string->bytes/locale key)))))
+
+         (msg-list    ; list of string
+           (split-list (string->list input) (length key-list))))
+
+    (if (equal? encrypt #t)
+      (concat
+        (waterfall-encrypt msg-list key-list))
+
+      (concat
+        (waterfall-decrypt msg-list key-list)))) )
