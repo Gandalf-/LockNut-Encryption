@@ -33,7 +33,7 @@
 
 (define (split-list l chunk)
   ; split the input list of characters into strings of chunk length
-  ; 
+  ;
   ; @l      list of char
   ; @chunk  int
 
@@ -44,9 +44,9 @@
       result
 
       (let ((size (min chunk (length remaining))))
-        (splitter 
-          (append result 
-                  (list (list->string (take remaining 
+        (splitter
+          (append result
+                  (list (list->string (take remaining
                                             size))))
           (list-tail remaining size)
           )))))
@@ -63,7 +63,7 @@
 
 (define (drop-last l)
   ; drop the last element from a list
-  ; 
+  ;
   ; @l  list of any
 
   (take l (- (length l) 1)))
@@ -100,7 +100,7 @@
 
   (map vigenere
        input
-       (append 
+       (append
          (list key)
          (map ord-string (drop-last input))
          )))
@@ -108,7 +108,7 @@
 
 (define (waterfall-decrypt input key)
   ; decrypts a waterfall encrypted list of characters
-  ; 
+  ;
   ; @input  list of string
   ; @key    list of int
 

@@ -20,7 +20,7 @@
 (define unbuffed-password "")
 
 ;----------------------------------------------------------------------
-; Waterfall required 
+; Waterfall required
 ;----------------------------------------------------------------------
 
 ; Define default-key, key-list and solver-list
@@ -28,11 +28,11 @@
             54 23 56 65 65 78 90 93 9 87 51 10 54 5 67 21 57 62 93 59 58 60 58 3 21))
 (define B '(8 65 5 42 29 60 46 48 44 68 64 82 50 86 38 3 67 35 88 4 73 30 51 56 38
             18 72 45 69 17 3 30 16 54 78 40 38 31 23 27 4 98 7 55 45 30 16 9 54 66))
-(define C '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18 
+(define C '(60 22 41 53 76 78 6 70 34 25 56 88 37 18 60 67 34 57 52 55 33 27 14 18
             98 40 24 24 52 61 41 17 90 63 39 27 80 55 15 1 20 2 4 96 7 79 37 9 55 17))
-(define D '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91 
+(define D '(49 21 59 0 28 31 51 43 45 34 44 32 28 94 0 10 69 30 72 2 12 28 86 53 91
             84 6 32 17 51 78 56 58 12 6 39 51 54 14 37 65 8 43 88 2 8 30 87 16 13))
-(define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62 
+(define E '(75 27 9 31 28 66 63 29 68 46 10 2 16 20 13 58 24 15 13 29 85 17 70 9 62
             76 67 59 93 60 22 88 99 6 67 32 11 91 89 83 58 83 41 37 6 20 9 43 12 84))
 
 ; Default key, 250 (* 50 5), random integers [0-100]
@@ -86,7 +86,7 @@
 
 ; Checks for blank password, then generates the both the encryption and decryption
 ; keys. These aren't passed out. They're values are set to key-list and solver-list,
-; predefined variables. This is done because they're needed in multiple places and 
+; predefined variables. This is done because they're needed in multiple places and
 ; between mutliple runs of these functions
 ;
 ; string, bool, bool -> string
@@ -149,8 +149,8 @@
 (define (buff-password password)
   (if (>= (string-length password) 50)
     (substring password 0 50)
-    (string-append password 
-                   (substring default-password 
+    (string-append password
+                   (substring default-password
                               0
                               (- 50 (string-length password)))) ))
 
@@ -176,8 +176,8 @@
             (file->listChars input-file-name)))
 
         ;Remove .txt and add .locknut extension
-        (new-file-name 
-          (string-append 
+        (new-file-name
+          (string-append
             (substring input-file-name 0 (- (string-length input-file-name) 4))
             ".locknut")))
 
@@ -187,7 +187,7 @@
 
     ;Encrypt and print
     (print-this
-      (waterfall 
+      (waterfall
         plain-text
         (list->string (map (lambda (x) (integer->char x)) key-list))
         #t)
@@ -199,7 +199,7 @@
 
 ;FILE DECRYPTION
 ; CALLED BY CREATE-FILE, decrypt
-; Takes an encrypted .locknut file as input and prints the decrypted version of the 
+; Takes an encrypted .locknut file as input and prints the decrypted version of the
 ; file to a text file.
 ; If glancing, open the file in notepad and delete when the user is finished.
 ; Otherwise, rename the decrypted text file to the original name of the input
@@ -210,7 +210,7 @@
         (chars-list (string->list (file->listChars input-file-name)))
 
         ;Remove .locknut extension and add .txt
-        (new-file-name 
+        (new-file-name
           (string-append
             (substring input-file-name 0 (- (string-length input-file-name) 8))
             ".txt")))
@@ -220,7 +220,7 @@
       (delete-file new-file-name))
 
     ;Decrypt the file with the given buffered password
-    (let ((decrypted-file 
+    (let ((decrypted-file
             (waterfall
               (list->string chars-list)
               (list->string (map (lambda (x) (integer->char x)) key-list))
@@ -274,7 +274,7 @@
 (define (create-file given-file-name password password-is-key?-value shareable?)
 
   ;Buffer password and generate the cipher key-list and solver-list
-  (set! password (generate-key-and-solver 
+  (set! password (generate-key-and-solver
                    (buff-password password)
                    password-is-key?-value
                    shareable?))
