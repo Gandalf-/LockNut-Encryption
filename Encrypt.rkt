@@ -10,7 +10,7 @@
 
 (require racket/gui)
 (require racket/port)
-(require "Waterfall.rkt")
+(require "alg/waterfall.rkt")
 
 ;Provisions to LockNut.rkt
 (provide decrypt)

@@ -1,16 +1,11 @@
 #lang racket
 
+; waterfall
+;
+; cryptography functions
+
 (require openssl/sha1)
 (provide (all-defined-out))
-
-
-(define (inverse-list l)
-  ; takes the inverse of the list
-  ;
-  ; @l      list of real
-  ; @return list of real
-
-  (map (lambda (x) (* -1 x)) l))
 
 
 (define (ord-string in)
@@ -99,8 +94,8 @@
 
 (define (waterfall-encrypt input key)
   ; encrypts a list of characters broken into sublists. we work forwards,
-  ; encrypting the current chunk with the next chunk until we get to the last
-  ; chunk, which is encrypted with the argument key
+  ; encrypting the current chunk with the next chunk. the first chunk uses the
+  ; argument key for encryption
   ;
   ; @input    list of string
   ; @key      list of int
@@ -159,3 +154,4 @@
          waterfall-encrypt
          waterfall-decrypt)
        msg-list key-list))))
+

@@ -1,9 +1,9 @@
 #lang racket
 
 (require test-engine/racket-tests)
-(require "Waterfall.rkt")
+(require "../alg/waterfall.rkt")
 
-(define message 
+(define message
   "hello there this is a much longer message because it turns out hashes are quite long too")
 
 (define encrypted_message
@@ -11,14 +11,6 @@
 
 (define key '(4 5 2 5 1))
 
-; inverse-list
-(check-expect
-  (inverse-list '())
-  '())
-
-(check-expect
-  (inverse-list '(1 2 3))
-  '(-1 -2 -3))
 
 ; ord-string
 (check-expect
@@ -126,7 +118,7 @@
     '(1 2))
   '("``" "\u0003\u0001" "\u0006\u0006"))
 
-; multi value key 
+; multi value key
 (check-expect
   (waterfall-encrypt
     '("ab" "cd")
@@ -163,7 +155,7 @@
     '(1 2))
   '("ab" "bc" "de"))
 
-; multi value key 
+; multi value key
 (check-expect
   (waterfall-decrypt
     '("``" "\u0002\u0006")
@@ -188,28 +180,28 @@
 ;waterfall
 ;; encrypt, decrypt
 (check-expect
-  (waterfall 
+  (waterfall
     (waterfall message "apple" #t)
     "apple" #f)
   message)
 
 ;; message is shorter than the key
 (check-expect
-  (waterfall 
+  (waterfall
     (waterfall "hello" "apple sauce this is long" #t)
     "apple sauce this is long" #f)
   "hello")
 
-;; decrypt, encrypt 
+;; decrypt, encrypt
 (check-expect
-  (waterfall 
+  (waterfall
     (waterfall message "apple" #f)
     "apple" #t)
   message)
 
-;; decrypt, encrypt 
+;; decrypt, encrypt
 (check-expect
-  (waterfall 
+  (waterfall
     (waterfall message "apple sauce this is long" #f)
     "apple sauce this is long" #t)
   message)
