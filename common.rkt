@@ -58,7 +58,7 @@
   ; Moves the file into a string
   ;
   ; @filename   string
-  ; @return     list of chars
+  ; @return     string
 
   (letrec ((in (open-input-file filename))
            (out (port->string in)))

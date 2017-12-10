@@ -5,7 +5,7 @@
 ; main file for gui version of locknut
 
 (require racket/gui)
-(require "Encrypt.rkt")
+(require "core.rkt")
 (require "common.rkt")
 (require "gui/common.rkt")
 (require "gui/main.rkt")

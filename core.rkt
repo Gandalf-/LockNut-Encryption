@@ -1,12 +1,8 @@
 #lang racket
 
-;----------------------------------------------------------------------
-;Encrypt
-;LockNut Encryption Program
-;Austin Voecks, Summer 2014
-
-;Functions that work between the algorithm and the GUI, handle file IO
-;----------------------------------------------------------------------
+; core
+;
+; functions that work between the algorithm and the GUI, handle file IO
 
 (require racket/gui)
 (require racket/port)
@@ -41,7 +37,7 @@
       (append pass-input-list pass-input-list))
 
     (map
-      (lambda (x y) (+ x y))
+      +
       default-key-list
       (take pass-input-list (length default-key-list)))))
 
@@ -54,7 +50,10 @@
   ; they're needed in multiple places and between mutliple runs of these
   ; functions
   ;
-  ; string, bool, bool -> string
+  ; @password           string
+  ; @password-is-key?   bool
+  ; @shareable?         bool
+  ; @return             string
 
   ;Determine which base-key to use. Default for shareable, Personal for not
   ;shareable
@@ -79,22 +78,13 @@
     password ))
 
 
-
-;----------------------------------------------------------------------
-;HELPERS
-;----------------------------------------------------------------------
-
-
-;CALLERS
-;================================================================
-
-;decrypt
-; CALLS DECRYPT-FILE
-; Checks the filename and passes info back up
-;
-; string, bool, bool -> string
-;---------------------------------------------
 (define (decrypt password password-is-key? shareable?)
+  ; Checks the filename and passes info back up
+  ;
+  ; @password           string
+  ; @password-is-key?   bool
+  ; @shareable?         bool
+  ; @return             string
 
   ;Save password in case the user wants to re-encrypt or decrypt
   (set-unbuffered-password password)
@@ -127,20 +117,19 @@
           "File must be encrypted .locknut file") )) ))
 
 
-;CREATE NEW ENCRYPTED FILE
-;CALLS ENCRYPT
-;
-; string, string, bool, bool -> none
-;-----------------------------------------------
-(define (create-file given-file-name password password-is-key? shareable?)
+(define (create-file
+          fname password password-is-key? shareable?)
+  ; create new encrypted file
+  ;
+  ; @fname            string
+  ; @password         string
+  ; @password-is-key? bool
+  ; @shareable?       bool
 
-  ;Buffer password and generate the cipher key-list
-  (set! password
+  (encrypt-file
+    fname
     (generate-key-and-solver
       (buffer-password password)
       password-is-key?
-      shareable?))
-
-  ;Encrypt file
-  (encrypt-file given-file-name password))
+      shareable?)))
 

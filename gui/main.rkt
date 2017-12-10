@@ -5,7 +5,7 @@
 ; main-window gui elements
 
 (require racket/gui)
-(require "../Encrypt.rkt")
+(require "../core.rkt")
 (require "common.rkt")
 (require "create.rkt")
 (require "options.rkt")
