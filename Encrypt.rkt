@@ -13,6 +13,7 @@
 
 (require "alg/encryption.rkt")
 (require "common.rkt")
+(require "gui/common.rkt")
 (require "gui/text-editor.rkt")
 
 (provide (all-defined-out))
@@ -101,7 +102,7 @@
   ;Buffer password, then generate the cipher key-list
   (set! password
     (generate-key-and-solver
-      (buff-password password)
+      (buffer-password password)
       password-is-key?
       shareable?))
 
@@ -119,7 +120,7 @@
                     (substring chosen-file (- (string-length chosen-file) 8)))
 
           ; Check if decryption was successful
-          (if (decrypt-file chosen-file password)
+          (if (decrypt-file chosen-file password decrypt-gui-callback)
             "Finished decrypting!"
             "Invalid password or incorrect base-key")
 
@@ -136,7 +137,7 @@
   ;Buffer password and generate the cipher key-list
   (set! password
     (generate-key-and-solver
-      (buff-password password)
+      (buffer-password password)
       password-is-key?
       shareable?))
 

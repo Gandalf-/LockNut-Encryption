@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/gui)
+(require "../common.rkt")
 
 (provide (all-defined-out))
 
@@ -63,3 +64,30 @@
        (stretchable-width #t)
        (auto-resize #t) ))
 
+
+(define (decrypt-gui-callback
+          decrypted-file in-fname out-fname)
+  ; Valid password: print file, show editor, load in editor
+  ;
+  ; @decrypted-file   string
+  ; @in-fname         string
+  ; @out-fname        string
+  ; @return           none
+
+  (begin
+    (set-curr-file-name out-fname)
+
+    (print-this
+      (substring decrypted-file 50 (string-length decrypted-file))
+      "ln_data/tmp.locknut")
+
+    (send file-info set-label
+          (buffer-fname in-fname 50))
+
+    (send text-editor load-file
+          "ln_data/tmp.locknut")
+
+    (send editor-frame show #t)
+
+    ;Cleanup
+    (delete-file "ln_data/tmp.locknut")))
