@@ -1,4 +1,4 @@
-#lang racket
+#lang typed/racket
 
 ; common
 ;
@@ -9,10 +9,15 @@
 
 ;Globals
 (define curr-file-name "")
-(define (set-curr-file-name n) (set! curr-file-name n))
+
+(: set-curr-file-name (-> String Void))
+(define (set-curr-file-name n)
+  (set! curr-file-name n))
 
 (define unbuffered-password "")
-(define (set-unbuffered-password n) (set! unbuffered-password n))
+(: set-unbuffered-password (-> String Void))
+(define (set-unbuffered-password n)
+  (set! unbuffered-password n))
 
 
 (define default-key
@@ -32,33 +37,31 @@
   "6AQO*fvr*RQ7Uv!mCnPc8vxKdia45a$uh'7B5K06Rcj863RMyg")
 
 (define key-list '() )
-(define (set-key-list l) (set! key-list l))
+(: set-key-list (-> (Listof Any) Void))
+(define (set-key-list l)
+  (set! key-list l))
 
 
+(: generate-personal-key (-> String))
 (define (generate-personal-key)
   ; Creates a string of 250 random integers [0-200]
-  ;
-  ; @return   string
 
   (string-join
     (build-list 250 (lambda (_) (number->string (random 200))))))
 
 
+; (: get-personal-key (-> (Listof Integer)))
 (define (get-personal-key)
   ; Gets the personal key from file
-  ;
-  ; @return   list of integers
 
   (map
     string->number
     (string-split (file->string "ln_data/PersonalKey.locknut"))))
 
 
+(: file->string (-> String String))
 (define (file->string filename)
   ; Moves the file into a string
-  ;
-  ; @filename   string
-  ; @return     string
 
   (letrec ((in (open-input-file filename))
            (out (port->string in)))
@@ -66,38 +69,35 @@
     out))
 
 
+(: init-file (-> String Void))
 (define (init-file name)
   ; Creates a new UTF8 .txt file by copying a blank copy
-  ;
-  ; @name     string
-  ; @return   none
 
   (when (file-exists? name)
     (delete-file name))
-  (copy-file "ln_support.txt" name #f))
+  (copy-file "ln_support.txt" name))
 
 
-(define (print-this x name)
-  ; Prints x to a file
-  ;
-  ; @x      string
-  ; @name   string
-  ; @return none
+; (define (print-this x name)
+;   ; Prints x to a file
+;
+;   (call-with-output-file*
+;     name #:exists 'replace
+;     (lambda (output-port)
+;       (display x output-port))))
+(: print-this (-> String String Void))
+(define (print-this content fname)
+  (with-output-to-file
+    fname
+    (lambda () (printf content))))
 
-  (call-with-output-file*
-    name #:exists 'replace
-    (lambda (output-port)
-      (display x output-port))))
 
-
+(: buffer-password (-> String String))
 (define (buffer-password p)
   ; Buffers the password to 50 characters. Check if it's longer than 50
   ; characters already, if it is, we truncate it. this is necessary so we
   ; can verify that decryption succeeded by comparing the first 50 characters
   ; of the decrypted file with the password provided
-  ;
-  ; @p          string
-  ; @return     string
 
   (if (>= (string-length p) 50)
 
@@ -109,27 +109,21 @@
       (substring default-password 0 (- 50 (string-length p))) )))
 
 
+(: buffer-fname (-> String Integer String))
 (define (buffer-fname s n)
   ; truncates strings over n characters, this is used by the gui to make very
   ; long file names readable. if len(s) < n, prepend '...' to s
-  ;
-  ; @s      string
-  ; @return string
 
-  (let ((size (string-length s)))
+  (let ((size : Integer (string-length s)))
     (if (< size n)
       s
       (string-append "..." (substring s (- size n) size))
       )))
 
 
+(: swap-extension (-> String String String String))
 (define (swap-extension base a b)
   ; remove 'a' and add 'b' to base
-
-  ; @base   string
-  ; @a      string
-  ; @b      string
-  ; @return string
 
   (string-append
     (substring base 0 (- (string-length base) (string-length a)))
