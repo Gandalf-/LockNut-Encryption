@@ -1,22 +1,20 @@
-#lang racket
+#lang typed/racket
 
 (provide (all-defined-out))
 (require "../common.rkt")
 (require "waterfall.rkt")
 
 
+(: encrypt-file (-> String String Void))
 (define (encrypt-file in-fname password)
   ; Takes a file as input and prints the encrypted version of the file to a
   ; .locknut file. Get string from source file, add password to front. Remove
   ; .txt and add .locknut extension
 
-  ; @in-fname   string
-  ; @password   string
-  ; @return     none
-
-  (let ((plain-text
+  (let ((plain-text : String
           (string-append password (file->string in-fname)))
-        (out-fname
+
+        (out-fname : String
           (swap-extension in-fname ".txt" ".locknut")))
 
     ;Remove the older version of the output file if necessary
@@ -34,21 +32,17 @@
     (delete-file in-fname)))
 
 
+(: decrypt-file (-> String String (-> String String String Void) Void))
 (define (decrypt-file in-fname password callback)
   ; Takes an encrypted .locknut file as input and prints the decrypted version
   ; of the file to a text file.  If glancing, open the file in notepad and
   ; delete when the user is finished.  Otherwise, rename the decrypted text
   ; file to the original name of the input
 
-  ; @in-fname   string
-  ; @password   string
-  ; @callback   function (string, string, string) -> none
-  ; @return     none
-
-  (let ((chars-list
+  (let ((chars-list : (Listof Char)
           (string->list (file->string in-fname)))
 
-        (out-fname
+        (out-fname : String
           (swap-extension in-fname ".locknut" ".txt")))
 
     ;Remove the older version of output file, if necessary
@@ -56,7 +50,7 @@
       (delete-file out-fname))
 
     ;Decrypt the file with the given buffered password
-    (let ((decrypted-file
+    (let ((decrypted-file : String
             (waterfall
               (list->string chars-list)
               (list->string (map integer->char key-list))
