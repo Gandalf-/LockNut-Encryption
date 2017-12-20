@@ -51,10 +51,10 @@
 
   (map
     string->number
-    (string-split (file->listChars "ln_data/PersonalKey.locknut"))))
+    (string-split (file->string "ln_data/PersonalKey.locknut"))))
 
 
-(define (file->listChars filename)
+(define (file->string filename)
   ; Moves the file into a string
   ;
   ; @filename   string
@@ -111,7 +111,7 @@
 
 (define (buffer-fname s n)
   ; truncates strings over n characters, this is used by the gui to make very
-  ; long file names readable
+  ; long file names readable. if len(s) < n, prepend '...' to s
   ;
   ; @s      string
   ; @return string

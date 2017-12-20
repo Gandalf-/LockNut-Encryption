@@ -1,43 +1,36 @@
-#lang racket
+#lang typed/racket
 
 ; waterfall
 ;
 ; cryptography functions
 
-(require openssl/sha1)
+(require typed/openssl/sha1)
 (provide (all-defined-out))
 
 
+(: ord-string (-> String (Listof Integer)))
 (define (ord-string in)
   ; list of string to list of ints where the ints are the ascii value for the
   ; string character at that position
-  ;
-  ; @in       string
-  ; @return   list of int
 
   (map
     char->integer
     (string->list in)))
 
 
+(: concat (-> (Listof String) String))
 (define (concat in)
   ; concatentate a list of strings
-  ;
-  ; @in       list of string
-  ; @return   string
 
   (foldr string-append "" in))
 
 
+(: split-list (-> (Listof Char) Integer (Listof String)))
 (define (split-list l chunk)
   ; split the input list of characters into strings of chunk length
-  ;
-  ; @l        list of char
-  ; @chunk    int
-  ; @return   list of string
 
-  (let splitter ((result '())
-                 (remaining l))
+  (let splitter ((result : (Listof String) '())
+                 (remaining : (Listof Char) l))
 
     (if (empty? remaining)
       result
@@ -51,37 +44,29 @@
           )))))
 
 
+(: extend (All (a) (-> (Listof a) Integer (Listof a))))
 (define (extend l n)
   ; extend a list to length 'n' by appending it to itself
-  ;
-  ; @l        list of any
-  ; @n        int
-  ; @return   list of any
 
-  (take (flatten (make-list n l)) n))
+  (take (append* (make-list n l)) n))
 
 
+(: drop-last (All (a) (-> (Listof a) (Listof a))))
 (define (drop-last l)
   ; drop the last element from a list
-  ;
-  ; @l        list of any
-  ; @return   list of any
 
   (take l (- (length l) 1)))
 
 
+(: vigenere (-> String (Listof Integer) String))
 (define (vigenere input key)
   ; encrypts input with the key. Simple Viegenere Cipher
   ; substitution cipher, no negative values
-  ;
-  ; @input    string
-  ; @key      list of int
-  ; @return   string
 
   (let ((characters (ord-string input)))
     (list->string
       (map
-        (lambda (x y)
+        (lambda ((x : Integer) (y : Integer))
           (integer->char
             (bitwise-xor x y)))
 
@@ -92,14 +77,11 @@
         ))))
 
 
+(: waterfall-encrypt (-> (Listof String) (Listof Integer) (Listof String)))
 (define (waterfall-encrypt input key)
   ; encrypts a list of characters broken into sublists. we work forwards,
   ; encrypting the current chunk with the next chunk. the first chunk uses the
   ; argument key for encryption
-  ;
-  ; @input    list of string
-  ; @key      list of int
-  ; @return   list of string
 
   (map vigenere
        input
@@ -109,19 +91,17 @@
          )))
 
 
+(: waterfall-decrypt (-> (Listof String) (Listof Integer) (Listof String)))
 (define (waterfall-decrypt input key)
   ; decrypts a waterfall encrypted list of characters
-  ;
-  ; @input    list of string
-  ; @key      list of int
-  ; @return   list of string
 
+  (: cipher (-> (Listof String) (Listof Integer) (Listof String) (Listof String)))
   (define (cipher top bottom output)
 
     (if (empty? top)
       output
 
-      (let ((result (vigenere (car top) bottom)))
+      (let ((result : String (vigenere (car top) bottom)))
         (cipher
           (cdr top)
           (ord-string result)
@@ -131,23 +111,19 @@
   (cipher input key '() ))
 
 
+(: waterfall (-> String String Boolean String))
 (define (waterfall input key encrypt)
   ; Encrypts or decrypts strings using the waterfall algorithm, the input key
   ; is only used with the first chunk of the input, subsequence chunks' key is
   ; the previous chunk. chunk size is determined by the length of the key
-  ;
-  ; @input    string
-  ; @key      string
-  ; @encrypt  bool
-  ; @return   string
 
-  (let* ((key-list    ; list of int
-           (ord-string
-             (sha1 (open-input-bytes
-                     (string->bytes/locale key)))))
+  (let* ((key-list : (Listof Integer)
+                   (ord-string
+                     (sha1 (open-input-bytes
+                             (string->bytes/locale key)))))
 
-         (msg-list    ; list of string
-           (split-list (string->list input) (length key-list))))
+         (msg-list : (Listof String)
+                   (split-list (string->list input) (length key-list))))
 
     (concat
       ((if encrypt

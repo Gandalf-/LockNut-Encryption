@@ -25,15 +25,15 @@
 
 ; panel
 
-(define panel
-  ;Panel for file encrypt and decrypt
+(define crypto-panel
+  ; panel for create-file and decrypt buttons
 
   (instantiate
     horizontal-panel% (main-frame)
     (stretchable-height #f)))
 
 (define info-help-panel
-  ;Panel for information and help buttons
+  ; panel for info and help buttons
 
   (instantiate
     horizontal-panel% (main-frame)
@@ -47,7 +47,7 @@
 
   (new button%
        (label "Encrypted File")
-       (parent panel)
+       (parent crypto-panel)
        (horiz-margin 22)
        (callback
          (lambda (b e)
@@ -71,7 +71,7 @@
 
   (new button%
        (label "Decrypt File")
-       (parent panel)
+       (parent crypto-panel)
        (horiz-margin 10)
        (callback
          (lambda (b e)

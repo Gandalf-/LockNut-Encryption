@@ -1,19 +1,19 @@
 #lang racket
 
 (require test-engine/racket-tests)
+
 (require "../alg/encryption.rkt")
+(require "common.rkt")
 
-
-(define test-file "data/alice.txt")
 
 ; encrypt-file
 (check-expect
-  (encrypt-file test-file "password")
+  (encrypt-file temp-file "password")
   #t)
 
 ; decrypt-file
 (check-expect
-  (decrypt-file test-file "password")
+  (decrypt-file temp-file "password")
   #t)
 
 (test)

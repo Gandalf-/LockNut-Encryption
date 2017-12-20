@@ -3,6 +3,7 @@
 ; core
 ;
 ; functions that work between the algorithm and the GUI, handle file IO
+; different than common in that it interacts with the gui and file io
 
 (require racket/gui)
 (require racket/port)

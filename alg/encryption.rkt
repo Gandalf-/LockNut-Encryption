@@ -15,7 +15,7 @@
   ; @return     none
 
   (let ((plain-text
-          (string-append password (file->listChars in-fname)))
+          (string-append password (file->string in-fname)))
         (out-fname
           (swap-extension in-fname ".txt" ".locknut")))
 
@@ -46,7 +46,7 @@
   ; @return     none
 
   (let ((chars-list
-          (string->list (file->listChars in-fname)))
+          (string->list (file->string in-fname)))
 
         (out-fname
           (swap-extension in-fname ".locknut" ".txt")))
