@@ -59,14 +59,14 @@
     (string-split (file->string "ln_data/PersonalKey.locknut"))))
 
 
-(: file->string (-> String String))
-(define (file->string filename)
-  ; Moves the file into a string
-
-  (letrec ((in (open-input-file filename))
-           (out (port->string in)))
-    (close-input-port in)
-    out))
+; (: file->string (-> String String))
+; (define (file->string filename)
+;   ; Moves the file into a string
+;
+;   (letrec ((in (open-input-file filename))
+;            (out (port->string in)))
+;     (close-input-port in)
+;     out))
 
 
 (: init-file (-> String Void))

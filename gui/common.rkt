@@ -10,6 +10,7 @@
 (define my-font (make-object font% 10 'modern))
 (define wait-time 1.5)
 
+; (: help-mode Boolean)
 (define help-mode #f)
 (define (help-mode-off) (set! help-mode #f))
 (define (help-mode-on) (set! help-mode #t))
@@ -65,6 +66,7 @@
        (auto-resize #t) ))
 
 
+; (: decrypt-gui-callback (-> String String String Boolean))
 (define (decrypt-gui-callback
           decrypted-file in-fname out-fname)
   ; Valid password: print file, show editor, load in editor
@@ -90,4 +92,6 @@
     (send editor-frame show #t)
 
     ;Cleanup
-    (delete-file "ln_data/tmp.locknut")))
+    (delete-file "ln_data/tmp.locknut")
+
+    #t))
